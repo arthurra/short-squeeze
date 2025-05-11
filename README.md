@@ -1,23 +1,22 @@
 # Short Squeeze Tracker
 
-A Python application for tracking penny stocks that show strong signs of an upcoming short squeeze.
+A web application that tracks penny stocks and identifies potential short squeeze opportunities.
 
 ## Features
 
-- Real-time monitoring of short interest data
-- Volume analysis and spike detection
-- Price momentum tracking
-- News and catalyst monitoring
-- Interactive dashboard for visualization
-- Automated alerts for potential short squeeze opportunities
+- Real-time stock data tracking
+- Short squeeze probability scoring
+- Interactive price and volume charts
+- High probability short squeeze alerts
+- Automated data collection and updates
 
-## Installation
+## Setup
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/short-squeeze-tracker.git
-cd short-squeeze-tracker
+git clone https://github.com/yourusername/short-squeeze.git
+cd short-squeeze
 ```
 
 2. Create a virtual environment and activate it:
@@ -33,50 +32,49 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Create a `.env` file with your API keys (if needed):
-
-```
-YAHOO_API_KEY=your_key_here
-NEWS_API_KEY=your_key_here
-```
-
-## Usage
-
-1. Start the data collection service:
+4. Run the application:
 
 ```bash
-python src/data_collector.py
+python app.py
 ```
 
-2. Start the dashboard:
+5. Open your browser and navigate to:
 
-```bash
-python src/dashboard.py
 ```
-
-3. Access the dashboard at `http://localhost:8050`
+http://localhost:5000
+```
 
 ## Project Structure
 
 ```
 short-squeeze/
+├── app.py              # Flask application
+├── requirements.txt    # Python dependencies
 ├── src/
-│   ├── data_collector.py      # Data collection and processing
-│   ├── dashboard.py           # Interactive dashboard
-│   ├── analysis.py            # Analysis functions
-│   ├── alerts.py              # Alert system
-│   └── utils.py               # Utility functions
-├── config/
-│   └── settings.py            # Configuration settings
-├── data/                      # Data storage
-├── tests/                     # Test files
-├── requirements.txt           # Project dependencies
-└── README.md                  # Project documentation
+│   ├── data_collector.py  # Data collection logic
+│   └── utils.py          # Utility functions
+├── templates/
+│   └── index.html      # Main page template
+└── data/
+    ├── cache/         # Cached stock data
+    └── results/       # Analysis results
 ```
+
+## Deployment
+
+This application can be deployed to GitHub Pages using GitHub Actions. The workflow will:
+
+1. Build the static site
+2. Deploy it to GitHub Pages
+3. Update the data periodically
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Short Squeeze Tracker</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.plot.ly/plotly-2.27.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <style>
+      .card {
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .chart-container {
+        height: 400px;
+        margin-bottom: 20px;
+      }
+      .select2-container {
+        width: 100% !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid py-4">
+      <h1 class="text-center mb-4">Short Squeeze Tracker</h1>
+
+      <div class="row">
+        <!-- Stock Selection -->
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Select Stock</h5>
+              <select id="stock-selector" class="form-select">
+                <option value="">Loading stocks...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Stock Details -->
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Stock Details</h5>
+              <div id="stock-details">Select a stock to view details</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="col-md-9">
+          <div class="card">
+            <div class="card-body">
+              <div id="price-chart" class="chart-container"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body">
+              <div id="volume-chart" class="chart-container"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- High Probability Stocks -->
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">High Probability Short Squeezes</h5>
+              <div id="high-probability-stocks"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize Select2
+      $(document).ready(function () {
+        $("#stock-selector").select2({
+          placeholder: "Select a stock",
+          allowClear: true,
+        });
+
+        // Load stocks
+        loadStocks();
+
+        // Set up stock selection handler
+        $("#stock-selector").on("change", function () {
+          const selectedStock = $(this).val();
+          if (selectedStock) {
+            loadStockData(selectedStock);
+          }
+        });
+
+        // Set up auto-refresh
+        setInterval(loadStocks, 60000); // Refresh every minute
+      });
+
+      function loadStocks() {
+        fetch("/api/stocks")
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Loaded stocks:", data);
+            const selector = $("#stock-selector");
+            selector.empty();
+
+            data.forEach((stock) => {
+              selector.append(new Option(stock.ticker, stock.ticker));
+            });
+
+            // Update high probability stocks
+            updateHighProbabilityStocks(data);
+
+            // Automatically select and load the first stock if available
+            if (data.length > 0) {
+              const firstStock = data[0].ticker;
+              selector.val(firstStock).trigger("change");
+              loadStockData(firstStock);
+            }
+          })
+          .catch((error) => console.error("Error loading stocks:", error));
+      }
+
+      function loadStockData(ticker) {
+        console.log("Loading data for:", ticker);
+        fetch(`/api/stock/${ticker}`)
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Received stock data:", data);
+            if (data) {
+              updateCharts(data);
+              updateStockDetails(data);
+            }
+          })
+          .catch((error) => console.error("Error loading stock data:", error));
+      }
+
+      function updateCharts(data) {
+        console.log("Updating charts with data:", data);
+
+        // Create price chart
+        const priceData = [
+          {
+            type: "candlestick",
+            x: data.data.index,
+            open: data.data.data.map((d) => d.Open),
+            high: data.data.data.map((d) => d.High),
+            low: data.data.data.map((d) => d.Low),
+            close: data.data.data.map((d) => d.Close),
+            name: "Price",
+          },
+        ];
+
+        const priceLayout = {
+          title: `${data.ticker} Price Chart`,
+          yaxis: { title: "Price" },
+          xaxis: {
+            title: "Date",
+            rangeslider: { visible: false },
+          },
+          height: 400,
+        };
+
+        console.log("Creating price chart with data:", priceData);
+        Plotly.newPlot("price-chart", priceData, priceLayout)
+          .then(() => console.log("Price chart created successfully"))
+          .catch((error) =>
+            console.error("Error creating price chart:", error)
+          );
+
+        // Create volume chart
+        const volumeData = [
+          {
+            type: "bar",
+            x: data.data.index,
+            y: data.data.data.map((d) => d.Volume),
+            name: "Volume",
+          },
+        ];
+
+        const volumeLayout = {
+          title: `${data.ticker} Volume Chart`,
+          yaxis: { title: "Volume" },
+          xaxis: {
+            title: "Date",
+            rangeslider: { visible: false },
+          },
+          height: 400,
+        };
+
+        console.log("Creating volume chart with data:", volumeData);
+        Plotly.newPlot("volume-chart", volumeData, volumeLayout)
+          .then(() => console.log("Volume chart created successfully"))
+          .catch((error) =>
+            console.error("Error creating volume chart:", error)
+          );
+      }
+
+      function updateStockDetails(data) {
+        console.log("Updating stock details:", data);
+        const details = document.getElementById("stock-details");
+        details.innerHTML = `
+                <p><strong>Short Interest:</strong> ${(
+                  data.short_interest * 100
+                ).toFixed(2)}%</p>
+                <p><strong>Float Shares:</strong> ${data.float_shares.toLocaleString()}</p>
+                <p><strong>Last Updated:</strong> ${new Date(
+                  data.last_updated
+                ).toLocaleString()}</p>
+            `;
+      }
+
+      function updateHighProbabilityStocks(stocks) {
+        console.log("Updating high probability stocks:", stocks);
+        const container = document.getElementById("high-probability-stocks");
+        const table = document.createElement("table");
+        table.className = "table table-striped";
+
+        table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Score</th>
+                        <th>Short Interest</th>
+                        <th>Days to Cover</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${stocks
+                      .sort((a, b) => b.score - a.score)
+                      .slice(0, 5)
+                      .map(
+                        (stock) => `
+                            <tr>
+                                <td>${stock.ticker}</td>
+                                <td>${stock.score.toFixed(2)}</td>
+                                <td>${(stock.short_interest * 100).toFixed(
+                                  2
+                                )}%</td>
+                                <td>${stock.days_to_cover.toFixed(1)}</td>
+                            </tr>
+                        `
+                      )
+                      .join("")}
+                </tbody>
+            `;
+
+        container.innerHTML = "";
+        container.appendChild(table);
+      }
+    </script>
+  </body>
+</html>

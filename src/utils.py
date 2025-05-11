@@ -17,7 +17,7 @@ def ensure_directories():
     for directory in [DATA_DIR, CACHE_DIR, RESULTS_DIR]:
         os.makedirs(directory, exist_ok=True)
 
-def get_stock_data(ticker, period='1mo'):
+def get_stock_data(ticker, period='3mo'):
     """Fetch stock data from Yahoo Finance."""
     try:
         stock = yf.Ticker(ticker)
