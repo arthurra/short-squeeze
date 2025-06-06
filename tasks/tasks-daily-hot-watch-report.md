@@ -71,6 +71,7 @@
   - [ ] 5.7 Create API rate limiting and fallback system
 
 - [ ] 6.0 Testing and Quality Assurance
+
   - [ ] 6.1 Write unit tests for core services
   - [ ] 6.2 Create integration tests for API connections
   - [ ] 6.3 Implement end-to-end testing

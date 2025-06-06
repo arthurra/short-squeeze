@@ -1,5 +1,31 @@
 # Penny Stock Insights Dashboard Tasks
 
+## Relevant Files
+
+- `src/services/stockDataService.ts` - Core service for fetching and managing stock data
+- `src/services/squeezeScoreService.ts` - Service for calculating squeeze signal scores
+- `src/services/filterService.ts` - Service for handling stock universe filtering
+- `src/components/Dashboard/DashboardLayout.tsx` - Main dashboard layout component
+- `src/components/Dashboard/StockList.tsx` - Component for displaying filtered stock list
+- `src/components/Dashboard/StockCard.tsx` - Individual stock card component
+- `src/components/Dashboard/FilterPanel.tsx` - Component for stock filtering controls
+- `src/components/Charts/SparklineChart.tsx` - Component for displaying sparkline charts
+- `src/lib/api/yahooFinance.ts` - Yahoo Finance API integration
+- `src/lib/api/polygon.ts` - Polygon.io API integration
+- `src/lib/utils/dataCache.ts` - Utility for API data caching
+- `src/lib/utils/filterUtils.ts` - Utility functions for stock filtering
+- `src/lib/types/stock.ts` - TypeScript interfaces for stock data
+- `src/lib/types/filter.ts` - TypeScript interfaces for filter configurations
+- `src/config/api.ts` - API configuration and rate limiting settings
+- `src/styles/Dashboard.module.css` - Styles for dashboard components
+
+### Notes
+
+- Unit tests should be placed alongside each implementation file
+- Use `npx jest` to run all tests
+- API keys and sensitive configuration should be stored in environment variables
+- Consider implementing rate limiting for external API calls
+
 ## Phase 1: Core Dashboard
 
 ### Data Integration
