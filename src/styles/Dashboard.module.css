@@ -1,0 +1,339 @@
+.filterPanel {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.filterGroup {
+  margin-bottom: 1.5rem;
+}
+
+.filterGroup h4 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.rangeInputs {
+  display: flex;
+  gap: 1rem;
+}
+
+.inputGroup {
+  flex: 1;
+}
+
+.inputGroup label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.inputGroup input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.exchangeCheckboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+
+.checkboxGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkboxGroup input[type="checkbox"] {
+  margin: 0;
+}
+
+.checkboxGroup label {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.resetButton {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #e9ecef;
+  border: none;
+  border-radius: 4px;
+  color: #495057;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.resetButton:hover {
+  background-color: #dee2e6;
+}
+
+/* Dashboard Layout */
+.dashboardLayout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.dashboardHeader {
+  background-color: #fff;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dashboardHeader h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.dashboardContent {
+  display: flex;
+  flex: 1;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+.filterSidebar {
+  width: 300px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+}
+
+.mainContent {
+  flex: 1;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+}
+
+.loadingSpinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #666;
+}
+
+.filterPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.filterSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filterSection h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.filterInputs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filterInputs input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.exchangeButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.exchangeButton {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.exchangeButton:hover {
+  background-color: #f0f0f0;
+}
+
+.exchangeButton.active {
+  background-color: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+
+.resetButton {
+  padding: 0.75rem;
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.resetButton:hover {
+  background-color: #c82333;
+}
+
+/* Stock List */
+.stockList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+/* Stock Card */
+.stockCard {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stockHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.stockHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+.stockName {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.stockPrice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.currentPrice {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.priceChange {
+  font-size: 0.9rem;
+}
+
+.positiveChange {
+  color: #28a745;
+}
+
+.negativeChange {
+  color: #dc3545;
+}
+
+.stockDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detailItem {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.detailLabel {
+  color: #666;
+}
+
+.detailValue {
+  color: #333;
+  font-weight: 500;
+}
+
+/* Sparkline Chart */
+.sparklineContainer {
+  height: 60px;
+  margin-top: 0.5rem;
+}
+
+.sparklineChart {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.sparklinePlaceholder {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Loading State */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--focus-ring);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
