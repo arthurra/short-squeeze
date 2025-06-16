@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "env": {
+    "NEXT_PUBLIC_SENTRY_DSN": "@next_public_sentry_dsn",
+    "KV_URL": "@kv_url",
+    "KV_REST_API_URL": "@kv_rest_api_url",
+    "KV_REST_API_TOKEN": "@kv_rest_api_token",
+    "KV_REST_API_READ_ONLY_TOKEN": "@kv_rest_api_read_only_token",
+    "YAHOO_FINANCE_API_KEY": "@yahoo_finance_api_key",
+    "POLYGON_API_KEY": "@polygon_api_key"
+  }
+}
