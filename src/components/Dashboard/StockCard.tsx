@@ -1,6 +1,7 @@
 import React from "react";
 import { StockData } from "../../lib/types/stock";
 import { SparklineChart } from "./SparklineChart";
+import { SqueezeScoreService } from "../../services/squeezeScoreService";
 import styles from "../../styles/Dashboard.module.css";
 
 interface StockCardProps {
@@ -10,6 +11,10 @@ interface StockCardProps {
 export const StockCard: React.FC<StockCardProps> = ({ stock }) => {
   const priceChangeClass =
     stock.change >= 0 ? styles.positiveChange : styles.negativeChange;
+
+  const squeezeScore =
+    SqueezeScoreService.getInstance().calculateBasicScore(stock);
+  const scoreClass = getScoreClass(squeezeScore);
 
   return (
     <div className={styles.stockCard}>
@@ -44,6 +49,12 @@ export const StockCard: React.FC<StockCardProps> = ({ stock }) => {
           <span className={styles.detailLabel}>Exchange:</span>
           <span className={styles.detailValue}>{stock.exchange}</span>
         </div>
+        <div className={styles.detailItem}>
+          <span className={styles.detailLabel}>Squeeze Score:</span>
+          <span className={`${styles.detailValue} ${scoreClass}`}>
+            {squeezeScore}
+          </span>
+        </div>
       </div>
 
       <div className={styles.sparklineContainer}>
@@ -52,3 +63,15 @@ export const StockCard: React.FC<StockCardProps> = ({ stock }) => {
     </div>
   );
 };
+
+/**
+ * Gets the CSS class for the squeeze score based on its value
+ * @param score The squeeze score (0-100)
+ * @returns CSS class name
+ */
+function getScoreClass(score: number): string {
+  if (score >= 80) return styles.scoreHigh;
+  if (score >= 60) return styles.scoreMedium;
+  if (score >= 40) return styles.scoreLow;
+  return styles.scoreVeryLow;
+}

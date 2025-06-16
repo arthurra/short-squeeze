@@ -337,3 +337,23 @@
   color: var(--text-secondary);
   text-align: center;
 }
+
+.scoreHigh {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.scoreMedium {
+  color: #eab308;
+  font-weight: 600;
+}
+
+.scoreLow {
+  color: #f97316;
+  font-weight: 600;
+}
+
+.scoreVeryLow {
+  color: #ef4444;
+  font-weight: 600;
+}
