@@ -13,6 +13,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@polygon.io/client-js": "^7.4.0",
     "@sentry/nextjs": "^9.29.0",
     "@tanstack/react-query": "^5.80.7",
     "@upstash/redis": "^1.35.0",
