@@ -1,0 +1,25 @@
+.app {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.themeToggleContainer {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
+}
+
+/* Global styles */
+:global(*) {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:global(body) {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
