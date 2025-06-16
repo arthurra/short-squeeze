@@ -1,0 +1,98 @@
+## Relevant Files
+
+- `app/dashboard/page.tsx` - Main dashboard component that displays the penny stock insights
+- `app/dashboard/page.test.tsx` - Unit tests for the dashboard component
+- `components/StockList.tsx` - Component for displaying the filtered list of stocks
+- `components/StockList.test.tsx` - Unit tests for the stock list component
+- `components/StockCard.tsx` - Individual stock card component showing key metrics
+- `components/StockCard.test.tsx` - Unit tests for the stock card component
+- `lib/api/stockData.ts` - API integration layer for fetching stock data
+- `lib/api/stockData.test.ts` - Unit tests for stock data API
+- `lib/utils/squeezeScore.ts` - Utility functions for calculating squeeze signal scores
+- `lib/utils/squeezeScore.test.ts` - Unit tests for squeeze score calculations
+- `lib/types/stock.ts` - TypeScript interfaces for stock data
+- `lib/hooks/useStockFilters.ts` - Custom hook for managing stock filters
+- `lib/hooks/useStockFilters.test.ts` - Unit tests for stock filters hook
+
+### Notes
+
+- Unit tests should be placed alongside their corresponding components and utilities
+- Use `npx jest` to run all tests or `npx jest [file-path]` for specific tests
+- API integration should use environment variables for API keys
+- Consider implementing error boundaries for API failures
+- Follow mobile-first design principles throughout
+
+## Tasks
+
+- [ ] 0.0 Project Setup and Scaffolding
+
+  - [ ] 0.1 Initialize Next.js 14 project with TypeScript
+  - [ ] 0.2 Set up Tailwind CSS and shadcn/ui
+  - [ ] 0.3 Configure ESLint and Prettier
+  - [ ] 0.4 Set up Jest and React Testing Library
+  - [ ] 0.5 Configure Cypress for E2E testing
+  - [ ] 0.6 Set up TanStack Query and Zustand
+  - [ ] 0.7 Configure Vercel KV for caching
+  - [ ] 0.8 Set up environment variables and secrets
+  - [ ] 0.9 Configure Husky for pre-commit hooks
+  - [ ] 0.10 Set up Sentry for error tracking
+  - [ ] 0.11 Create initial project documentation
+  - [ ] 0.12 Configure CI/CD pipeline with Vercel
+
+- [ ] 1.0 Data Integration and API Setup
+
+  - [ ] 1.1 Set up Yahoo Finance/Polygon.io API integration
+  - [ ] 1.2 Implement API key management using environment variables
+  - [ ] 1.3 Create TypeScript interfaces for stock data types
+  - [ ] 1.4 Implement error handling and retry logic for API calls
+  - [ ] 1.5 Set up API rate limiting and request throttling
+  - [ ] 1.6 Create mock data for development and testing
+
+- [ ] 2.0 Core Dashboard UI Implementation
+
+  - [ ] 2.1 Create responsive dashboard layout with mobile-first approach
+  - [ ] 2.2 Implement stock list component with virtual scrolling
+  - [ ] 2.3 Create stock card component with key metrics display
+  - [ ] 2.4 Add sparkline charts for 30-day price visualization
+  - [ ] 2.5 Implement light/dark mode support
+  - [ ] 2.6 Add loading states and error boundaries
+  - [ ] 2.7 Create detailed stock analysis view
+
+- [ ] 3.0 Stock Filtering System
+
+  - [ ] 3.1 Implement basic stock universe filtering ($1-$5 price, $20M-$300M market cap)
+  - [ ] 3.2 Create filter UI components for volume spike threshold
+  - [ ] 3.3 Add short interest percentage filtering
+  - [ ] 3.4 Implement sector/industry filtering
+  - [ ] 3.5 Add dilution risk level filtering
+  - [ ] 3.6 Create custom hook for managing filter state
+  - [ ] 3.7 Implement filter persistence
+
+- [ ] 4.0 Squeeze Signal Score Implementation
+
+  - [ ] 4.1 Create algorithm for volume vs average volume comparison
+  - [ ] 4.2 Implement short interest percentage calculation
+  - [ ] 4.3 Add trading flow metrics analysis
+  - [ ] 4.4 Integrate SEC filing presence check
+  - [ ] 4.5 Implement news report presence detection
+  - [ ] 4.6 Add social media buzz metrics calculation
+  - [ ] 4.7 Create weighted scoring system (0-100)
+
+- [ ] 5.0 Data Management and Caching
+
+  - [ ] 5.1 Implement daily data update mechanism
+  - [ ] 5.2 Set up data caching system
+  - [ ] 5.3 Create historical data storage (30-day retention)
+  - [ ] 5.4 Implement data validation and sanitization
+  - [ ] 5.5 Add data refresh indicators
+  - [ ] 5.6 Create data backup mechanism
+
+- [ ] 6.0 Performance Optimization and Testing
+
+  - [ ] 6.1 Write unit tests for all components
+  - [ ] 6.2 Implement integration tests for API calls
+  - [ ] 6.3 Add end-to-end tests for critical user flows
+  - [ ] 6.4 Optimize bundle size and loading performance
+  - [ ] 6.5 Implement code splitting and lazy loading
+  - [ ] 6.6 Add performance monitoring
+  - [ ] 6.7 Create documentation for testing procedures
