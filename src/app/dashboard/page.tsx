@@ -5,9 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
 import { StockList } from '@/components/StockList';
+import { StockFilters, type StockFilters as StockFiltersType } from '@/components/StockFilters';
 
 export default function DashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [filters, setFilters] = useState<StockFiltersType>({
+    search: '',
+    sector: 'All Sectors',
+    priceRange: 'Any Price',
+    marketCapRange: 'Any Market Cap',
+    shortInterestRange: 'Any Short Interest',
+    volumeRange: 'Any Volume',
+    volumeSpikeThreshold: 1,
+  });
+
+  const handleFilterChange = (newFilters: StockFiltersType) => {
+    setFilters(newFilters);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -23,10 +37,9 @@ export default function DashboardPage() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-                {/* Filter sidebar content will go here */}
                 <div className="py-6">
                   <h2 className="mb-2 px-2 text-lg font-semibold">Filters</h2>
-                  {/* Filter components will be added here */}
+                  <StockFilters onFilterChange={handleFilterChange} />
                 </div>
               </SheetContent>
             </Sheet>
@@ -44,7 +57,7 @@ export default function DashboardPage() {
         <aside className="fixed top-14 z-30 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 overflow-y-auto border-r md:sticky md:block">
           <div className="py-6 pr-6 lg:py-8">
             <h2 className="mb-2 px-2 text-lg font-semibold">Filters</h2>
-            {/* Filter components will be added here */}
+            <StockFilters onFilterChange={handleFilterChange} />
           </div>
         </aside>
 
@@ -56,7 +69,7 @@ export default function DashboardPage() {
               {/* Add action buttons here */}
             </div>
             <div className="grid gap-4">
-              <StockList />
+              <StockList filters={filters} />
             </div>
           </div>
         </main>
