@@ -1,63 +1,62 @@
 import { config } from '../config/env';
 
 /**
- * Rate limiter using token bucket algorithm
+ * Rate limiter using sliding window algorithm
  */
 export class RateLimiter {
-  private tokens: number;
-  private lastRefill: number;
-  private readonly maxTokens: number;
-  private readonly refillRate: number; // tokens per second
+  private readonly maxRequests: number;
+  private readonly windowMs: number;
+  private requests: number[];
+  private lastCleanup: number;
 
-  constructor(requestsPerSecond: number) {
-    this.maxTokens = requestsPerSecond;
-    this.tokens = requestsPerSecond;
-    this.refillRate = requestsPerSecond;
-    this.lastRefill = Date.now();
+  constructor(maxRequests: number, windowMs: number) {
+    this.maxRequests = maxRequests;
+    this.windowMs = windowMs;
+    this.requests = [];
+    this.lastCleanup = Date.now();
   }
 
   /**
-   * Refills the token bucket based on elapsed time
+   * Cleans up old requests outside the current window
    */
-  private refillTokens(): void {
+  private cleanup(): void {
     const now = Date.now();
-    const timePassed = (now - this.lastRefill) / 1000; // convert to seconds
-    const newTokens = timePassed * this.refillRate;
+    const cutoff = now - this.windowMs;
 
-    this.tokens = Math.min(this.maxTokens, this.tokens + newTokens);
-    this.lastRefill = now;
+    // Remove requests older than the window
+    this.requests = this.requests.filter((time) => time > cutoff);
+    this.lastCleanup = now;
   }
 
   /**
-   * Acquires a token from the bucket
-   * @returns Promise that resolves when a token is available
+   * Executes a function with rate limiting
+   * @param fn The function to execute
+   * @returns The result of the function
    */
-  async acquireToken(): Promise<void> {
-    this.refillTokens();
+  async execute<T>(fn: () => Promise<T>): Promise<T> {
+    this.cleanup();
 
-    if (this.tokens >= 1) {
-      this.tokens -= 1;
-      return;
+    if (this.requests.length >= this.maxRequests) {
+      // Calculate wait time until oldest request expires
+      const oldestRequest = this.requests[0];
+      const waitTime = this.windowMs - (Date.now() - oldestRequest);
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      return this.execute(fn);
     }
 
-    // Calculate wait time until next token
-    const waitTime = ((1 - this.tokens) / this.refillRate) * 1000;
-    await new Promise((resolve) => setTimeout(resolve, waitTime));
-
-    // Try again after waiting
-    return this.acquireToken();
+    this.requests.push(Date.now());
+    return fn();
   }
 }
 
 // Create a singleton instance with rate limit from config
-export const rateLimiter = new RateLimiter(config.apiRateLimit);
+export const rateLimiter = new RateLimiter(config.apiRateLimit, 1000);
 
 /**
  * Wraps a function with rate limiting
  */
 export function withRateLimit<T extends (...args: any[]) => Promise<any>>(fn: T): T {
   return (async (...args: Parameters<T>) => {
-    await rateLimiter.acquireToken();
-    return fn(...args);
+    return rateLimiter.execute(() => fn(...args));
   }) as T;
 }

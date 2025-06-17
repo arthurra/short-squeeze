@@ -3,7 +3,7 @@ import prettier from 'eslint-plugin-prettier';
 
 const compat = new FlatCompat();
 
-export default [
+const config = [
   ...compat.extends('next/core-web-vitals'),
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
@@ -12,6 +12,9 @@ export default [
     },
     rules: {
       'prettier/prettier': 'error',
+      // '@typescript-eslint/no-var-requires': 'error', // Commented out problematic rule
     },
   },
 ];
+
+export default config;

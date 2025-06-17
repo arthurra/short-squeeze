@@ -4,7 +4,7 @@ import { ApiError } from '../types/stock';
 /**
  * Sleep utility function
  */
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Retry configuration
