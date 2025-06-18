@@ -4,9 +4,24 @@ import { useEffect, useState } from 'react';
 import { StockCard } from './StockCard';
 import { type StockFilters } from './StockFilters';
 import { LoadingCard } from './ui/loading';
-import { ErrorMessage } from './ErrorBoundary';
 import { useStockFilters } from '@/lib/hooks/useStockFilters';
-import { DataRefreshIndicator } from './DataRefreshIndicator';
+import dynamic from 'next/dynamic';
+
+// Lazy load DataRefreshIndicator component to reduce bundle size
+const DataRefreshIndicator = dynamic(
+  () => import('./DataRefreshIndicator').then((mod) => ({ default: mod.DataRefreshIndicator })),
+  {
+    ssr: false,
+  },
+);
+
+// Lazy load ErrorMessage component to reduce bundle size
+const ErrorMessage = dynamic(
+  () => import('./ErrorBoundary').then((mod) => ({ default: mod.ErrorMessage })),
+  {
+    ssr: false,
+  },
+);
 
 interface Stock {
   symbol: string;

@@ -199,10 +199,10 @@ export function validatePriceDataPoint(point: unknown): PriceDataPoint {
 
   return {
     timestamp: data.timestamp,
-    open: Number(data.open.toFixed(2)),
-    high: Number(data.high.toFixed(2)),
-    low: Number(data.low.toFixed(2)),
-    close: Number(data.close.toFixed(2)),
+    open: Number(open.toFixed(2)),
+    high: Number(high.toFixed(2)),
+    low: Number(low.toFixed(2)),
+    close: Number(close.toFixed(2)),
     volume: Math.floor(data.volume),
   };
 }

@@ -1,5 +1,6 @@
 import { cacheManager, CACHE_KEYS, CACHE_TTL } from './cache';
 import { PriceDataPoint, HistoricalPrices } from '../types/stock';
+import { kv } from '../kv';
 
 const RETENTION_DAYS = 30;
 const HISTORICAL_DATA_PREFIX = 'historical_data:';
@@ -33,8 +34,8 @@ export async function cleanupHistoricalData(): Promise<void> {
   const now = Date.now();
   const retentionCutoff = now - RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
-  // Get all historical data keys
-  const keys = await cacheManager.keys(HISTORICAL_DATA_PREFIX);
+  // Get all historical data keys using kv directly
+  const keys = await kv.keys(`${HISTORICAL_DATA_PREFIX}*`);
 
   // Process each key
   for (const key of keys) {

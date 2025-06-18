@@ -27,7 +27,7 @@ export function SparklineChart({ data, color = 'rgb(34, 197, 94)' }: SparklineCh
         }));
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height="100%" data-testid="sparkline-chart">
       <LineChart data={chartData}>
         <Line type="monotone" dataKey="price" stroke={color} strokeWidth={2} dot={false} />
       </LineChart>

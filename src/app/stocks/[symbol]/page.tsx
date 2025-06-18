@@ -2,9 +2,26 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { StockDetail } from '@/components/StockDetail';
+import dynamic from 'next/dynamic';
 import { LoadingCard } from '@/components/ui/loading';
-import { ErrorMessage } from '@/components/ErrorBoundary';
+import { usePagePerformance } from '@/lib/hooks/usePerformance';
+
+// Lazy load StockDetail component to reduce initial bundle size
+const StockDetail = dynamic(
+  () => import('@/components/StockDetail').then((mod) => ({ default: mod.StockDetail })),
+  {
+    loading: () => <LoadingCard />,
+    ssr: false,
+  },
+);
+
+// Lazy load ErrorMessage component to reduce initial bundle size
+const ErrorMessage = dynamic(
+  () => import('@/components/ErrorBoundary').then((mod) => ({ default: mod.ErrorMessage })),
+  {
+    ssr: false,
+  },
+);
 
 interface Stock {
   symbol: string;
@@ -43,6 +60,9 @@ const mockStock: Stock = {
 };
 
 export default function StockPage() {
+  // Track page performance
+  usePagePerformance('stock-detail');
+
   const params = useParams();
   const [stock, setStock] = useState<Stock | null>(null);
   const [loading, setLoading] = useState(true);

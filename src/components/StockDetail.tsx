@@ -2,8 +2,13 @@
 
 import { ArrowDown, ArrowUp, BarChart2, TrendingUp, Volume2 } from 'lucide-react';
 import { StockCard } from './StockCard';
-import { SparklineChart } from './SparklineChart';
+import dynamic from 'next/dynamic';
 import { DataRefreshIndicator } from './DataRefreshIndicator';
+
+const SparklineChart = dynamic(
+  () => import('./SparklineChart').then((mod) => ({ default: mod.SparklineChart })),
+  { ssr: false },
+);
 
 interface StockDetailProps {
   symbol: string;
@@ -39,24 +44,35 @@ export function StockDetail({
   const isVolumeUp = volumeChange >= 0;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6" data-testid="stock-detail">
       {/* Header Section */}
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{symbol}</h1>
-          <p className="text-lg text-muted-foreground">{name}</p>
+          <h1 className="text-2xl font-bold" data-testid="stock-symbol">
+            {symbol}
+          </h1>
+          <p className="text-lg text-muted-foreground" data-testid="stock-name">
+            {name}
+          </p>
           <div className="mt-2 flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">{sector}</span>
+            <span className="text-sm text-muted-foreground" data-testid="stock-sector">
+              {sector}
+            </span>
             <span className="text-muted-foreground">•</span>
-            <span className="text-sm text-muted-foreground">{industry}</span>
+            <span className="text-sm text-muted-foreground" data-testid="stock-industry">
+              {industry}
+            </span>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-3xl font-bold">${price.toFixed(2)}</p>
+          <p className="text-3xl font-bold" data-testid="stock-price">
+            ${price.toFixed(2)}
+          </p>
           <p
             className={`flex items-center justify-end text-lg ${
               isPositive ? 'text-green-600' : 'text-red-600'
             }`}
+            data-testid="stock-change"
           >
             {isPositive ? (
               <ArrowUp className="mr-1 h-5 w-5" />
@@ -72,7 +88,7 @@ export function StockDetail({
       {/* Price Chart Section */}
       <div className="rounded-lg border bg-card p-4">
         <h2 className="mb-4 text-lg font-semibold">Price History</h2>
-        <div className="h-[300px]">
+        <div className="h-[300px]" data-testid="price-chart">
           <SparklineChart
             data={priceHistory}
             color={isPositive ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'}
@@ -89,7 +105,9 @@ export function StockDetail({
             <BarChart2 className="h-5 w-5 text-muted-foreground" />
             <h3 className="font-semibold">Market Cap</h3>
           </div>
-          <p className="mt-2 text-2xl font-bold">${(marketCap / 1e9).toFixed(2)}B</p>
+          <p className="mt-2 text-2xl font-bold" data-testid="stock-market-cap">
+            ${(marketCap / 1e9).toFixed(2)}B
+          </p>
         </div>
 
         <div className="rounded-lg border bg-card p-4">
@@ -97,7 +115,9 @@ export function StockDetail({
             <Volume2 className="h-5 w-5 text-muted-foreground" />
             <h3 className="font-semibold">Volume</h3>
           </div>
-          <p className="mt-2 text-2xl font-bold">{volume.toLocaleString()}</p>
+          <p className="mt-2 text-2xl font-bold" data-testid="stock-volume">
+            {volume.toLocaleString()}
+          </p>
           <p className={`mt-1 text-sm ${isVolumeUp ? 'text-green-600' : 'text-red-600'}`}>
             {isVolumeUp ? '+' : ''}
             {volumeChange.toFixed(1)}% vs avg
@@ -109,7 +129,9 @@ export function StockDetail({
             <TrendingUp className="h-5 w-5 text-muted-foreground" />
             <h3 className="font-semibold">Short Interest</h3>
           </div>
-          <p className="mt-2 text-2xl font-bold">{shortInterest.toFixed(1)}%</p>
+          <p className="mt-2 text-2xl font-bold" data-testid="stock-short-interest">
+            {shortInterest.toFixed(1)}%
+          </p>
         </div>
 
         <div className="rounded-lg border bg-card p-4">

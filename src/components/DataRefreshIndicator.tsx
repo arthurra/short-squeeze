@@ -54,6 +54,7 @@ export function DataRefreshIndicator({
         needsRefresh && 'text-yellow-600',
         className,
       )}
+      data-testid="data-refresh-indicator"
     >
       <RefreshCw
         className={cn('h-4 w-4', isRefreshing && 'animate-spin', needsRefresh && 'text-yellow-600')}

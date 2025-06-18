@@ -2,7 +2,12 @@
 
 import { ArrowDown, ArrowUp, TrendingUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { SparklineChart } from './SparklineChart';
+import dynamic from 'next/dynamic';
+
+const SparklineChart = dynamic(
+  () => import('./SparklineChart').then((mod) => ({ default: mod.SparklineChart })),
+  { ssr: false },
+);
 
 interface Stock {
   symbol: string;
@@ -37,18 +42,26 @@ export function StockCard({ stock, variant = 'compact' }: StockCardProps) {
     <div
       className="flex h-full cursor-pointer flex-col rounded-lg border bg-card p-4 shadow-sm transition-colors hover:bg-accent"
       onClick={handleClick}
+      data-testid="stock-card"
     >
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="font-semibold">{stock.symbol}</h3>
-          <p className="text-sm text-muted-foreground">{stock.name}</p>
+          <h3 className="font-semibold" data-testid="stock-symbol">
+            {stock.symbol}
+          </h3>
+          <p className="text-sm text-muted-foreground" data-testid="stock-name">
+            {stock.name}
+          </p>
         </div>
         <div className="text-right">
-          <p className="font-semibold">${stock.price.toFixed(2)}</p>
+          <p className="font-semibold" data-testid="stock-price">
+            ${stock.price.toFixed(2)}
+          </p>
           <p
             className={`flex items-center justify-end text-sm ${
               isPositive ? 'text-green-600' : 'text-red-600'
             }`}
+            data-testid="stock-change"
           >
             {isPositive ? (
               <ArrowUp className="mr-1 h-4 w-4" />
@@ -63,11 +76,11 @@ export function StockCard({ stock, variant = 'compact' }: StockCardProps) {
       <div className="mt-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground" data-testid="stock-volume">
             Vol: {stock.volume.toLocaleString()}
           </span>
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground" data-testid="stock-market-cap">
           MCap: ${(stock.marketCap / 1000000).toFixed(1)}M
         </div>
       </div>
@@ -77,7 +90,9 @@ export function StockCard({ stock, variant = 'compact' }: StockCardProps) {
           <div className="mt-4 grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Short Interest</p>
-              <p className="font-semibold">{stock.shortInterest.toFixed(1)}%</p>
+              <p className="font-semibold" data-testid="stock-short-interest">
+                {stock.shortInterest.toFixed(1)}%
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Avg Volume</p>
@@ -87,7 +102,9 @@ export function StockCard({ stock, variant = 'compact' }: StockCardProps) {
 
           <div className="mt-4">
             <p className="text-sm text-muted-foreground">Sector</p>
-            <p className="font-semibold">{stock.sector}</p>
+            <p className="font-semibold" data-testid="stock-sector">
+              {stock.sector}
+            </p>
           </div>
 
           <div className="mt-2">

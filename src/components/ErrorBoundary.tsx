@@ -34,7 +34,10 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="flex h-full min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border bg-card p-6 text-center">
+        <div
+          className="flex h-full min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border bg-card p-6 text-center"
+          data-testid="error-boundary"
+        >
           <AlertCircle className="h-12 w-12 text-destructive" />
           <h2 className="text-xl font-semibold">Something went wrong</h2>
           <p className="text-sm text-muted-foreground">
@@ -66,7 +69,10 @@ export function ErrorMessage({
   retry,
 }: ErrorMessageProps) {
   return (
-    <div className="flex h-full min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border bg-card p-6 text-center">
+    <div
+      className="flex h-full min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border bg-card p-6 text-center"
+      data-testid="error-message"
+    >
       <AlertCircle className="h-12 w-12 text-destructive" />
       <h2 className="text-xl font-semibold">{title}</h2>
       <p className="text-sm text-muted-foreground">{message}</p>

@@ -18,14 +18,18 @@ export const getStockQuote = withRateLimit(
       async () => {
         const client = getPolygonClient();
         const response = await client.stocks.lastQuote(symbol);
+
+        // ILastQuote returns ILastTradeInfo in results
+        const lastTrade = response.results;
+
         return {
           data: {
-            symbol: response.symbol,
-            price: response.lastPrice,
-            volume: response.lastSize,
-            timestamp: response.timestamp,
-            change: response.change,
-            changePercent: response.changePercent,
+            symbol: symbol,
+            price: lastTrade?.p || 0, // price
+            volume: lastTrade?.s || 0, // size
+            timestamp: typeof lastTrade?.t === 'number' ? lastTrade.t : Date.now(), // timestamp
+            change: 0, // Polygon.io doesn't provide change in lastQuote
+            changePercent: 0, // Polygon.io doesn't provide changePercent in lastQuote
           },
           timestamp: Date.now(),
         };
@@ -44,20 +48,17 @@ export const getStockDetails = withRateLimit(
     return withApiRetry(
       async () => {
         const client = getPolygonClient();
-        const [tickerDetails, shortInterest] = await Promise.all([
-          client.reference.tickerDetails(symbol),
-          client.reference.shortInterest(symbol),
-        ]);
+        const tickerDetails = await client.reference.tickerDetails(symbol);
 
         return {
           data: {
-            symbol: tickerDetails.symbol,
-            name: tickerDetails.name,
-            marketCap: tickerDetails.marketCap,
-            sector: tickerDetails.sector,
-            industry: tickerDetails.industry,
-            shortInterest: shortInterest.shortInterest,
-            shortInterestRatio: shortInterest.shortInterestRatio,
+            symbol: tickerDetails.results?.ticker || symbol,
+            name: tickerDetails.results?.name || symbol,
+            marketCap: tickerDetails.results?.market_cap || 0,
+            sector: tickerDetails.results?.sic_description || 'Unknown',
+            industry: tickerDetails.results?.sic_description || 'Unknown',
+            shortInterest: 0, // Polygon.io doesn't provide short interest data
+            shortInterestRatio: 0, // Polygon.io doesn't provide short interest ratio
           },
           timestamp: Date.now(),
         };
@@ -81,8 +82,9 @@ export const getHistoricalPrices = withRateLimit(
       async () => {
         const client = getPolygonClient();
         const response = await client.stocks.aggregates(symbol, 1, 'day', startDate, endDate);
+
         return {
-          data: response.results.map((point: any) => ({
+          data: (response.results || []).map((point: any) => ({
             timestamp: point.t,
             open: point.o,
             high: point.h,

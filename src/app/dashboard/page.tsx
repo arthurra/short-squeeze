@@ -5,18 +5,39 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
 import { StockList } from '@/components/StockList';
-import { StockFilters, type StockFilters as StockFiltersType } from '@/components/StockFilters';
+import dynamic from 'next/dynamic';
+import type { StockFilters as StockFiltersType } from '@/components/StockFilters';
+import { usePagePerformance } from '@/lib/hooks/usePerformance';
+
+// Lazy load StockFilters component to reduce initial bundle size
+const StockFilters = dynamic(
+  () => import('@/components/StockFilters').then((mod) => ({ default: mod.StockFilters })),
+  {
+    loading: () => (
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-muted rounded"></div>
+        <div className="h-32 bg-muted rounded"></div>
+      </div>
+    ),
+    ssr: false,
+  },
+);
 
 export default function DashboardPage() {
+  // Track page performance
+  usePagePerformance('dashboard');
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [filters, setFilters] = useState<StockFiltersType>({
     search: '',
     sector: 'All Sectors',
+    industry: 'All Industries',
     priceRange: 'Any Price',
     marketCapRange: 'Any Market Cap',
     shortInterestRange: 'Any Short Interest',
     volumeRange: 'Any Volume',
     volumeSpikeThreshold: 1,
+    dilutionRisk: 'Any Risk',
   });
 
   const handleFilterChange = (newFilters: StockFiltersType) => {
@@ -31,12 +52,16 @@ export default function DashboardPage() {
           <div className="mr-4 flex md:hidden">
             <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
+                <Button variant="ghost" size="icon" className="md:hidden" aria-label="Toggle menu">
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+              <SheetContent
+                side="left"
+                className="w-[300px] sm:w-[400px]"
+                data-testid="mobile-sidebar"
+              >
                 <div className="py-6">
                   <h2 className="mb-2 px-2 text-lg font-semibold">Filters</h2>
                   <StockFilters onFilterChange={handleFilterChange} />

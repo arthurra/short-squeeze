@@ -46,7 +46,7 @@ interface LoadingCardProps {
 
 export function LoadingCard({ variant = 'compact' }: LoadingCardProps) {
   return (
-    <div className="rounded-lg border bg-card p-4">
+    <div className="rounded-lg border bg-card p-4" data-testid="loading-card">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <LoadingSkeleton className="h-6 w-24" />

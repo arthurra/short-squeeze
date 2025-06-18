@@ -19,15 +19,16 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Type assertions to satisfy TS for global mocks
-(globalThis as any).ResizeObserver = jest.fn().mockImplementation(() => ({
+// Mock ResizeObserver
+globalThis.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
   disconnect: jest.fn(),
-})) as unknown as typeof ResizeObserver;
+})) as jest.MockedClass<typeof ResizeObserver>;
 
-(globalThis as any).IntersectionObserver = jest.fn().mockImplementation(() => ({
+// Mock IntersectionObserver
+globalThis.IntersectionObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
   disconnect: jest.fn(),
-})) as unknown as typeof IntersectionObserver;
+})) as jest.MockedClass<typeof IntersectionObserver>;
