@@ -1,11 +1,11 @@
-import { withSentryConfig } from '@sentry/nextjs';
-import type { NextConfig } from 'next';
+const { withSentryConfig } = require('@sentry/nextjs');
 
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   /* config options here */
 };
 
-export default withSentryConfig(nextConfig, {
+module.exports = withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 

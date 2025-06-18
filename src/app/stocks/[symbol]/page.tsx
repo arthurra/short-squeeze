@@ -44,33 +44,48 @@ const mockStock: Stock = {
 
 export default function StockPage() {
   const params = useParams();
-  const symbol = params.symbol as string;
   const [stock, setStock] = useState<Stock | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
 
   useEffect(() => {
     const fetchStock = async () => {
       try {
-        setLoading(true);
-        setError(null);
-        // Simulate network delay
+        // Simulate API call
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        setStock(mockStock);
+        // Mock data for development
+        setStock({
+          symbol: params.symbol as string,
+          name: 'Example Stock',
+          price: 1.23,
+          change: 5.67,
+          volume: 1000000,
+          marketCap: 50000000,
+          shortInterest: 15.5,
+          avgVolume: 800000,
+          sector: 'Technology',
+          industry: 'Software',
+          priceHistory: Array.from({ length: 30 }, (_, i) => ({
+            date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString(),
+            price: 1 + Math.random() * 0.5,
+          })),
+        });
+        setLastUpdated(Date.now());
+        setLoading(false);
       } catch (err) {
-        setError('Failed to fetch stock data. Please try again.');
-      } finally {
+        setError('Failed to fetch stock data');
         setLoading(false);
       }
     };
 
     fetchStock();
-  }, [symbol]);
+  }, [params.symbol]);
 
   if (loading) {
     return (
       <main className="container mx-auto py-6">
-        <LoadingCard variant="detailed" />
+        <LoadingCard />
       </main>
     );
   }
@@ -78,11 +93,7 @@ export default function StockPage() {
   if (error || !stock) {
     return (
       <main className="container mx-auto py-6">
-        <ErrorMessage
-          title="Failed to load stock"
-          message={error || 'Stock not found'}
-          retry={() => window.location.reload()}
-        />
+        <ErrorMessage message={error || 'Stock not found'} />
       </main>
     );
   }
@@ -101,6 +112,7 @@ export default function StockPage() {
         sector={stock.sector}
         industry={stock.industry}
         priceHistory={stock.priceHistory}
+        lastUpdated={lastUpdated}
       />
     </main>
   );

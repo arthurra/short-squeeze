@@ -6,6 +6,7 @@ import { type StockFilters } from './StockFilters';
 import { LoadingCard } from './ui/loading';
 import { ErrorMessage } from './ErrorBoundary';
 import { useStockFilters } from '@/lib/hooks/useStockFilters';
+import { DataRefreshIndicator } from './DataRefreshIndicator';
 
 interface Stock {
   symbol: string;
@@ -86,6 +87,7 @@ export function StockList({ filters }: StockListProps) {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
   const { getFilteredStocks } = useStockFilters();
   const filteredStocks = getFilteredStocks(stocks);
 
@@ -95,6 +97,7 @@ export function StockList({ filters }: StockListProps) {
         // Simulate API call
         await new Promise((resolve) => setTimeout(resolve, 1000));
         setStocks(mockStocks);
+        setLastUpdated(Date.now());
         setLoading(false);
       } catch (err) {
         setError('Failed to fetch stocks');
@@ -127,6 +130,10 @@ export function StockList({ filters }: StockListProps) {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Stock List</h3>
+        <DataRefreshIndicator lastUpdated={lastUpdated} />
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredStocks.map((stock, i) => (
           <StockCard key={stock.symbol + '-' + i} stock={stock} variant="compact" />

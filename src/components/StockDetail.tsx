@@ -3,6 +3,7 @@
 import { ArrowDown, ArrowUp, BarChart2, TrendingUp, Volume2 } from 'lucide-react';
 import { StockCard } from './StockCard';
 import { SparklineChart } from './SparklineChart';
+import { DataRefreshIndicator } from './DataRefreshIndicator';
 
 interface StockDetailProps {
   symbol: string;
@@ -16,6 +17,7 @@ interface StockDetailProps {
   sector: string;
   industry: string;
   priceHistory: { date: string; price: number }[];
+  lastUpdated?: number;
 }
 
 export function StockDetail({
@@ -30,6 +32,7 @@ export function StockDetail({
   sector,
   industry,
   priceHistory,
+  lastUpdated = Date.now(),
 }: StockDetailProps) {
   const isPositive = change >= 0;
   const volumeChange = ((volume - avgVolume) / avgVolume) * 100;
@@ -62,6 +65,7 @@ export function StockDetail({
             )}
             {Math.abs(change).toFixed(2)}%
           </p>
+          <DataRefreshIndicator lastUpdated={lastUpdated} className="mt-2" />
         </div>
       </div>
 
