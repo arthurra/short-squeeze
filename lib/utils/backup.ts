@@ -45,11 +45,13 @@ export async function createBackup(): Promise<void> {
     const historicalKeys = await kv.keys(`${CACHE_KEYS.HISTORICAL_DATA}:*`);
     const historicalData: Record<string, HistoricalPrices> = {};
 
-    for (const key of historicalKeys) {
-      const data = await kv.get<HistoricalPrices>(key);
-      if (data) {
-        const symbol = key.split(':')[1];
-        historicalData[symbol] = data;
+    if (Array.isArray(historicalKeys)) {
+      for (const key of historicalKeys) {
+        const data = await kv.get<HistoricalPrices>(key);
+        if (data) {
+          const symbol = key.split(':')[1];
+          historicalData[symbol] = data;
+        }
       }
     }
 
@@ -106,6 +108,9 @@ export async function restoreFromBackup(): Promise<void> {
       }
     }
   } catch (error) {
+    if (error instanceof Error && error.message === 'No backup found') {
+      throw error;
+    }
     console.error('Backup restoration failed:', error);
     throw new Error('Failed to restore from backup');
   }
@@ -122,25 +127,15 @@ export async function listBackups(): Promise<
 
     // Get stock data backups
     const stockBackupKeys = await kv.keys(`${BACKUP_KEYS.STOCK_DATA}:*`);
-    for (const key of stockBackupKeys) {
-      const backup = await kv.get<{ data: any; metadata: BackupMetadata }>(key);
-      if (backup) {
-        backups.push({
-          timestamp: backup.metadata.timestamp,
-          metadata: backup.metadata,
-        });
-      }
-    }
-
-    // Get historical data backups
-    const historicalBackupKeys = await kv.keys(`${BACKUP_KEYS.HISTORICAL_DATA}:*`);
-    for (const key of historicalBackupKeys) {
-      const backup = await kv.get<{ data: any; metadata: BackupMetadata }>(key);
-      if (backup) {
-        backups.push({
-          timestamp: backup.metadata.timestamp,
-          metadata: backup.metadata,
-        });
+    if (Array.isArray(stockBackupKeys)) {
+      for (const key of stockBackupKeys) {
+        const backup = await kv.get<{ data: any; metadata: BackupMetadata }>(key);
+        if (backup) {
+          backups.push({
+            timestamp: backup.metadata.timestamp,
+            metadata: backup.metadata,
+          });
+        }
       }
     }
 

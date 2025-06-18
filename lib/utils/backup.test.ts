@@ -1,3 +1,4 @@
+import { jest, expect, describe, it, beforeEach } from '@jest/globals';
 import { kv } from '../kv';
 import { cacheManager } from './cache';
 import { createBackup, restoreFromBackup, listBackups, cleanupOldBackups } from './backup';
@@ -16,7 +17,6 @@ jest.mock('./cache', () => ({
   cacheManager: {
     get: jest.fn(),
     set: jest.fn(),
-    keys: jest.fn(),
   },
   CACHE_KEYS: {
     STOCK_DATA: 'stock_data',
@@ -47,41 +47,37 @@ describe('Backup Utilities', () => {
   describe('createBackup', () => {
     it('should create a backup of stock data', async () => {
       (cacheManager.get as jest.Mock).mockResolvedValue(mockStockData);
-      (cacheManager.keys as jest.Mock).mockResolvedValue([]);
+      (kv.keys as jest.Mock).mockResolvedValue([]);
 
       await createBackup();
 
-      expect(kv.set).toHaveBeenCalledWith(
-        'backup:stock_data:1234567890',
-        expect.objectContaining({
-          data: mockStockData,
-          metadata: expect.objectContaining({
-            timestamp: mockTimestamp,
-            dataType: 'stock_data',
-            recordCount: 2,
-          }),
-        }),
-      );
+      expect(kv.set).toHaveBeenCalledWith('backup:stock_data:1234567890', {
+        data: mockStockData,
+        metadata: {
+          timestamp: mockTimestamp,
+          version: '1.0.0',
+          dataType: 'stock_data',
+          recordCount: 2,
+        },
+      });
     });
 
     it('should create a backup of historical data', async () => {
       (cacheManager.get as jest.Mock).mockResolvedValue(null);
-      (cacheManager.keys as jest.Mock).mockResolvedValue(['historical_data:AAPL']);
+      (kv.keys as jest.Mock).mockResolvedValue(['historical_data:AAPL']);
       (kv.get as jest.Mock).mockResolvedValue(mockHistoricalData.AAPL);
 
       await createBackup();
 
-      expect(kv.set).toHaveBeenCalledWith(
-        'backup:historical_data:1234567890',
-        expect.objectContaining({
-          data: mockHistoricalData,
-          metadata: expect.objectContaining({
-            timestamp: mockTimestamp,
-            dataType: 'historical_data',
-            recordCount: 1,
-          }),
-        }),
-      );
+      expect(kv.set).toHaveBeenCalledWith('backup:historical_data:1234567890', {
+        data: mockHistoricalData,
+        metadata: {
+          timestamp: mockTimestamp,
+          version: '1.0.0',
+          dataType: 'historical_data',
+          recordCount: 1,
+        },
+      });
     });
 
     it('should handle errors gracefully', async () => {
@@ -116,25 +112,30 @@ describe('Backup Utilities', () => {
 
   describe('listBackups', () => {
     it('should list all available backups', async () => {
-      const mockBackups = [
-        {
-          data: mockStockData,
-          metadata: { timestamp: 1234567890, dataType: 'stock_data', recordCount: 2 },
+      const mockBackup = {
+        data: mockStockData,
+        metadata: {
+          timestamp: mockTimestamp,
+          version: '1.0.0',
+          dataType: 'stock_data',
+          recordCount: 2,
         },
-      ];
+      };
 
       (kv.keys as jest.Mock).mockResolvedValue(['backup:stock_data:1234567890']);
-      (kv.get as jest.Mock).mockResolvedValue(mockBackups[0]);
+      (kv.get as jest.Mock).mockResolvedValue(mockBackup);
 
       const backups = await listBackups();
 
       expect(backups).toHaveLength(1);
       expect(backups[0]).toEqual({
-        timestamp: 1234567890,
-        metadata: expect.objectContaining({
+        timestamp: mockTimestamp,
+        metadata: {
+          timestamp: mockTimestamp,
+          version: '1.0.0',
           dataType: 'stock_data',
           recordCount: 2,
-        }),
+        },
       });
     });
 
@@ -150,30 +151,95 @@ describe('Backup Utilities', () => {
   describe('cleanupOldBackups', () => {
     it('should delete old backups keeping only the most recent ones', async () => {
       const mockBackups = [
-        { timestamp: 1234567890, metadata: {} },
-        { timestamp: 1234567880, metadata: {} },
-        { timestamp: 1234567870, metadata: {} },
-        { timestamp: 1234567860, metadata: {} },
-        { timestamp: 1234567850, metadata: {} },
-        { timestamp: 1234567840, metadata: {} },
+        {
+          timestamp: 1234567890,
+          metadata: {
+            timestamp: 1234567890,
+            version: '1.0.0',
+            dataType: 'stock_data',
+            recordCount: 2,
+          },
+        },
+        {
+          timestamp: 1234567880,
+          metadata: {
+            timestamp: 1234567880,
+            version: '1.0.0',
+            dataType: 'stock_data',
+            recordCount: 2,
+          },
+        },
+        {
+          timestamp: 1234567870,
+          metadata: {
+            timestamp: 1234567870,
+            version: '1.0.0',
+            dataType: 'stock_data',
+            recordCount: 2,
+          },
+        },
+        {
+          timestamp: 1234567860,
+          metadata: {
+            timestamp: 1234567860,
+            version: '1.0.0',
+            dataType: 'stock_data',
+            recordCount: 2,
+          },
+        },
+        {
+          timestamp: 1234567850,
+          metadata: {
+            timestamp: 1234567850,
+            version: '1.0.0',
+            dataType: 'stock_data',
+            recordCount: 2,
+          },
+        },
+        {
+          timestamp: 1234567840,
+          metadata: {
+            timestamp: 1234567840,
+            version: '1.0.0',
+            dataType: 'stock_data',
+            recordCount: 2,
+          },
+        },
       ];
 
-      (kv.keys as jest.Mock).mockResolvedValue(['backup:stock_data:1234567890']);
-      (kv.get as jest.Mock).mockResolvedValue({ data: {}, metadata: mockBackups[0] });
+      jest.spyOn(require('./backup'), 'listBackups').mockResolvedValue(mockBackups);
+      (kv.del as jest.Mock).mockResolvedValue(undefined);
 
       await cleanupOldBackups(3);
 
+      // Should delete 3 backups (keeping 3 most recent)
       expect(kv.del).toHaveBeenCalledTimes(6); // 3 backups * 2 types (stock and historical)
     });
 
     it('should not delete backups if count is within limit', async () => {
       const mockBackups = [
-        { timestamp: 1234567890, metadata: {} },
-        { timestamp: 1234567880, metadata: {} },
+        {
+          timestamp: 1234567890,
+          metadata: {
+            timestamp: 1234567890,
+            version: '1.0.0',
+            dataType: 'stock_data',
+            recordCount: 2,
+          },
+        },
+        {
+          timestamp: 1234567880,
+          metadata: {
+            timestamp: 1234567880,
+            version: '1.0.0',
+            dataType: 'stock_data',
+            recordCount: 2,
+          },
+        },
       ];
 
-      (kv.keys as jest.Mock).mockResolvedValue(['backup:stock_data:1234567890']);
-      (kv.get as jest.Mock).mockResolvedValue({ data: {}, metadata: mockBackups[0] });
+      jest.spyOn(require('./backup'), 'listBackups').mockResolvedValue(mockBackups);
+      (kv.del as jest.Mock).mockResolvedValue(undefined);
 
       await cleanupOldBackups(3);
 

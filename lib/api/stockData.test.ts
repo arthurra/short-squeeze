@@ -5,7 +5,7 @@ import { ApiError } from '../types/stock';
 
 // Mock the Polygon.io client
 jest.mock('@polygon.io/client-js', () => ({
-  createClient: () => ({
+  restClient: jest.fn().mockImplementation(() => ({
     stocks: {
       lastQuote: jest.fn(),
       aggregates: jest.fn(),
@@ -14,7 +14,7 @@ jest.mock('@polygon.io/client-js', () => ({
       tickerDetails: jest.fn(),
       shortInterest: jest.fn(),
     },
-  }),
+  })),
 }));
 
 describe('Stock Data API', () => {
@@ -33,7 +33,7 @@ describe('Stock Data API', () => {
         changePercent: 1.5,
       };
 
-      const client = require('@polygon.io/client-js').createClient();
+      const client = require('@polygon.io/client-js').restClient();
       client.stocks.lastQuote.mockResolvedValue(mockQuote);
 
       const result = await getStockQuote('AAPL');
@@ -52,7 +52,7 @@ describe('Stock Data API', () => {
     });
 
     it('should handle API errors', async () => {
-      const client = require('@polygon.io/client-js').createClient();
+      const client = require('@polygon.io/client-js').restClient();
       client.stocks.lastQuote.mockRejectedValue(new Error('API Error'));
 
       await expect(getStockQuote('AAPL')).rejects.toMatchObject({
@@ -77,7 +77,7 @@ describe('Stock Data API', () => {
         shortInterestRatio: 2.5,
       };
 
-      const client = require('@polygon.io/client-js').createClient();
+      const client = require('@polygon.io/client-js').restClient();
       client.reference.tickerDetails.mockResolvedValue(mockTickerDetails);
       client.reference.shortInterest.mockResolvedValue(mockShortInterest);
 
@@ -98,7 +98,7 @@ describe('Stock Data API', () => {
     });
 
     it('should handle API errors', async () => {
-      const client = require('@polygon.io/client-js').createClient();
+      const client = require('@polygon.io/client-js').restClient();
       client.reference.tickerDetails.mockRejectedValue(new Error('API Error'));
 
       await expect(getStockDetails('AAPL')).rejects.toMatchObject({
@@ -114,7 +114,7 @@ describe('Stock Data API', () => {
         results: [{ t: 1234567890, o: 150, h: 155, l: 148, c: 152, v: 1000000 }],
       };
 
-      const client = require('@polygon.io/client-js').createClient();
+      const client = require('@polygon.io/client-js').restClient();
       client.stocks.aggregates.mockResolvedValue(mockHistoricalData);
 
       const result = await getHistoricalPrices('AAPL', '2024-01-01', '2024-01-31');
@@ -135,7 +135,7 @@ describe('Stock Data API', () => {
     });
 
     it('should handle API errors', async () => {
-      const client = require('@polygon.io/client-js').createClient();
+      const client = require('@polygon.io/client-js').restClient();
       client.stocks.aggregates.mockRejectedValue(new Error('API Error'));
 
       await expect(getHistoricalPrices('AAPL', '2024-01-01', '2024-01-31')).rejects.toMatchObject({

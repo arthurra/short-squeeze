@@ -22,14 +22,14 @@ describe('Environment Configuration', () => {
     expect(config.cacheTTL).toBe(300);
   });
 
-  it('should throw error for invalid numeric env vars', () => {
+  it('should throw error for invalid numeric env vars', async () => {
     process.env.API_RATE_LIMIT = 'invalid';
     // Defer import to after env var is set
     jest.resetModules();
-    expect(() => {
-      // eslint-disable-next-line
-      require('./env').config.apiRateLimit;
-    }).toThrow('Invalid number for environment variable: API_RATE_LIMIT');
+    await expect(async () => {
+      const { config } = await import('./env');
+      return config.apiRateLimit;
+    }).rejects.toThrow('Invalid number for environment variable: API_RATE_LIMIT');
   });
 
   it('should throw error for missing required env vars', () => {

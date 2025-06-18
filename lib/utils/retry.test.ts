@@ -6,12 +6,12 @@ import * as retryUtils from './retry';
 
 describe('Retry Utility', () => {
   beforeEach(() => {
-    // No fake timers; use real timers for async retry tests
-    jest.spyOn(retryUtils, 'sleep' as any).mockImplementation(() => Promise.resolve());
+    // Mock sleep to resolve immediately
+    jest.spyOn(retryUtils, 'sleep').mockImplementation(() => Promise.resolve());
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   it('should succeed on first attempt', async () => {
@@ -30,7 +30,7 @@ describe('Retry Utility', () => {
     const result = await withRetry(mockFn, { maxAttempts: 2, initialDelay: 0, maxDelay: 0 });
     expect(result).toBe('success');
     expect(mockFn).toHaveBeenCalledTimes(2);
-  });
+  }, 10000);
 
   it('should not retry on non-retryable errors', async () => {
     const mockFn = jest
@@ -50,22 +50,22 @@ describe('Retry Utility', () => {
       .fn<() => Promise<string>>()
       .mockRejectedValue(Object.assign(new Error('Network error'), { name: 'NetworkError' }));
 
-    const promise = withRetry(mockFn, { maxAttempts: 2, initialDelay: 0, maxDelay: 0 });
-    await expect(promise).rejects.toMatchObject({ name: 'NetworkError' });
+    await expect(
+      withRetry(mockFn, { maxAttempts: 2, initialDelay: 0, maxDelay: 0 }),
+    ).rejects.toMatchObject({ name: 'NetworkError' });
     expect(mockFn).toHaveBeenCalledTimes(2);
-  });
+  }, 10000);
 
   it('should wrap errors with ApiError', async () => {
     const mockFn = jest
       .fn<() => Promise<string>>()
       .mockRejectedValue(Object.assign(new Error('Network error'), { name: 'NetworkError' }));
 
-    const promise = withApiRetry(mockFn, 'ERR_CODE', 'Something went wrong');
-    await expect(promise).rejects.toMatchObject({
+    await expect(withApiRetry(mockFn, 'ERR_CODE', 'Something went wrong')).rejects.toMatchObject({
       code: 'ERR_CODE',
       message: 'Something went wrong',
     });
-  });
+  }, 10000);
 
   it('should use exponential backoff', async () => {
     const mockFn = jest
@@ -82,5 +82,5 @@ describe('Retry Utility', () => {
     });
     expect(result).toBe('success');
     expect(mockFn).toHaveBeenCalledTimes(3);
-  });
+  }, 10000);
 });

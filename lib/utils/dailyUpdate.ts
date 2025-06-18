@@ -1,4 +1,3 @@
-import { restClient } from '@polygon.io/client-js';
 import { config } from '../config/env';
 import { StockAnalysis, ApiResponse } from '../types/stock';
 import { withApiRetry } from './retry';
@@ -16,9 +15,6 @@ import {
 import { createBackup, cleanupOldBackups } from './backup';
 import { StockQuote, StockDetails, PriceDataPoint } from '../types/stock';
 import { mockPolygonClient } from '../mocks/polygonClient';
-
-// Initialize Polygon.io client
-const polygonClient = restClient(config.polygonApiKey);
 
 interface IAggs {
   results: Array<{
@@ -63,27 +59,29 @@ export async function shouldUpdateData(): Promise<boolean> {
 /**
  * Updates stock data and creates a backup
  */
-export async function updateStockData(symbols: string[]): Promise<void> {
+export async function updateStockData(symbols: string[], client: any): Promise<void> {
   try {
     // Fetch and update stock data
     const stockData: Record<string, any> = {};
 
     for (const symbol of symbols) {
       const [quote, details, aggs, lastQuote] = await Promise.all([
-        mockPolygonClient.getQuote(symbol),
-        mockPolygonClient.getTickerDetails(symbol),
-        mockPolygonClient.getAggs(symbol),
-        mockPolygonClient.getLastQuote(symbol),
+        client.getQuote(symbol),
+        client.getTickerDetails(symbol),
+        client.getAggs(symbol),
+        client.getLastQuote(symbol),
       ]);
 
       // Calculate volume analysis
       const volumeAnalysis = {
         averageVolume:
-          aggs.results.reduce((sum, point) => sum + point.volume, 0) / aggs.results.length,
+          aggs.results.reduce((sum: number, point: { volume: number }) => sum + point.volume, 0) /
+          aggs.results.length,
         currentVolume: lastQuote.lastSize,
         volumeRatio:
           lastQuote.lastSize /
-          (aggs.results.reduce((sum, point) => sum + point.volume, 0) / aggs.results.length),
+          (aggs.results.reduce((sum: number, point: { volume: number }) => sum + point.volume, 0) /
+            aggs.results.length),
       };
 
       // Calculate short interest analysis
@@ -123,9 +121,10 @@ export async function updateStockData(symbols: string[]): Promise<void> {
  */
 export async function getLatestStockData(
   symbols: string[],
+  client: any,
 ): Promise<Record<string, StockAnalysis>> {
   if (await shouldUpdateData()) {
-    await updateStockData(symbols);
+    await updateStockData(symbols, client);
   }
 
   const data = await cacheManager.get<Record<string, StockAnalysis>>(CACHE_KEYS.STOCK_DATA);

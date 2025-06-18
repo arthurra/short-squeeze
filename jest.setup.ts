@@ -1,12 +1,10 @@
 import '@testing-library/jest-dom';
 import { jest } from '@jest/globals';
 
-// Mock environment variables
 process.env.POLYGON_API_KEY = 'test-api-key';
 process.env.NEXT_PUBLIC_SENTRY_DSN = 'test-sentry-dsn';
 process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000';
 
-// Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: jest.fn().mockImplementation((query) => ({
@@ -21,16 +19,15 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mock ResizeObserver
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
+// Type assertions to satisfy TS for global mocks
+(globalThis as any).ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
   disconnect: jest.fn(),
-}));
+})) as unknown as typeof ResizeObserver;
 
-// Mock IntersectionObserver
-global.IntersectionObserver = jest.fn().mockImplementation(() => ({
+(globalThis as any).IntersectionObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
   disconnect: jest.fn(),
-}));
+})) as unknown as typeof IntersectionObserver;

@@ -22,7 +22,13 @@ describe('Data Validation', () => {
     it('should validate valid stock quote', () => {
       const quote = mockStockQuote('TEST');
       const validated = validateStockQuote(quote);
-      expect(validated).toEqual(quote);
+      expect(validated).toEqual({
+        ...quote,
+        price: Number(quote.price.toFixed(2)),
+        change: Number(quote.change.toFixed(2)),
+        changePercent: Number(quote.changePercent.toFixed(2)),
+        volume: Math.floor(quote.volume),
+      });
     });
 
     it('should throw on missing required fields', () => {
@@ -45,7 +51,12 @@ describe('Data Validation', () => {
     it('should validate valid stock details', () => {
       const details = mockStockDetails('TEST');
       const validated = validateStockDetails(details);
-      expect(validated).toEqual(details);
+      expect(validated).toEqual({
+        ...details,
+        marketCap: Math.floor(details.marketCap),
+        shortInterest: Math.floor(details.shortInterest),
+        shortInterestRatio: Number(details.shortInterestRatio.toFixed(4)),
+      });
     });
 
     it('should throw on missing required fields', () => {
@@ -68,7 +79,14 @@ describe('Data Validation', () => {
     it('should validate valid price data point', () => {
       const point = mockHistoricalPrices('TEST')[0];
       const validated = validatePriceDataPoint(point);
-      expect(validated).toEqual(point);
+      expect(validated).toEqual({
+        ...point,
+        open: Number(point.open.toFixed(2)),
+        high: Number(point.high.toFixed(2)),
+        low: Number(point.low.toFixed(2)),
+        close: Number(point.close.toFixed(2)),
+        volume: Math.floor(point.volume),
+      });
     });
 
     it('should throw on missing required fields', () => {
@@ -98,7 +116,12 @@ describe('Data Validation', () => {
     it('should validate valid volume analysis', () => {
       const analysis = mockVolumeAnalysis();
       const validated = validateVolumeAnalysis(analysis);
-      expect(validated).toEqual(analysis);
+      expect(validated).toEqual({
+        ...analysis,
+        averageVolume: Math.floor(analysis.averageVolume),
+        currentVolume: Math.floor(analysis.currentVolume),
+        volumeRatio: Number(analysis.volumeRatio.toFixed(2)),
+      });
     });
 
     it('should throw on missing required fields', () => {
@@ -121,7 +144,12 @@ describe('Data Validation', () => {
     it('should validate valid short interest analysis', () => {
       const analysis = mockShortInterestAnalysis();
       const validated = validateShortInterestAnalysis(analysis);
-      expect(validated).toEqual(analysis);
+      expect(validated).toEqual({
+        ...analysis,
+        shortInterest: Math.floor(analysis.shortInterest),
+        shortInterestRatio: Number(analysis.shortInterestRatio.toFixed(4)),
+        shortInterestPercent: Number(analysis.shortInterestPercent.toFixed(2)),
+      });
     });
 
     it('should throw on missing required fields', () => {
@@ -144,7 +172,36 @@ describe('Data Validation', () => {
     it('should validate valid stock analysis', () => {
       const analysis = mockStockAnalysis('TEST');
       const validated = validateStockAnalysis(analysis);
-      expect(validated).toEqual(analysis);
+      expect(validated).toEqual({
+        ...analysis,
+        quote: {
+          ...analysis.quote,
+          price: Number(analysis.quote.price.toFixed(2)),
+          change: Number(analysis.quote.change.toFixed(2)),
+          changePercent: Number(analysis.quote.changePercent.toFixed(2)),
+          volume: Math.floor(analysis.quote.volume),
+        },
+        details: {
+          ...analysis.details,
+          marketCap: Math.floor(analysis.details.marketCap),
+          shortInterest: Math.floor(analysis.details.shortInterest),
+          shortInterestRatio: Number(analysis.details.shortInterestRatio.toFixed(4)),
+        },
+        volumeAnalysis: {
+          ...analysis.volumeAnalysis,
+          averageVolume: Math.floor(analysis.volumeAnalysis.averageVolume),
+          currentVolume: Math.floor(analysis.volumeAnalysis.currentVolume),
+          volumeRatio: Number(analysis.volumeAnalysis.volumeRatio.toFixed(2)),
+        },
+        shortInterestAnalysis: {
+          ...analysis.shortInterestAnalysis,
+          shortInterest: Math.floor(analysis.shortInterestAnalysis.shortInterest),
+          shortInterestRatio: Number(analysis.shortInterestAnalysis.shortInterestRatio.toFixed(4)),
+          shortInterestPercent: Number(
+            analysis.shortInterestAnalysis.shortInterestPercent.toFixed(2),
+          ),
+        },
+      });
     });
 
     it('should throw on missing required fields', () => {

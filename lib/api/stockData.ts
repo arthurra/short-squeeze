@@ -1,11 +1,13 @@
-import { createClient } from '@polygon.io/client-js';
+import { restClient } from '@polygon.io/client-js';
 import { config } from '../config/env';
 import { StockQuote, StockDetails, PriceDataPoint, ApiResponse, ApiError } from '../types/stock';
 import { withApiRetry } from '../utils/retry';
 import { withRateLimit } from '../utils/rateLimiter';
 
-// Initialize Polygon.io client with validated API key
-const polygonClient = createClient(config.polygonApiKey);
+// Helper to get Polygon.io client (for testability)
+function getPolygonClient() {
+  return restClient(config.polygonApiKey);
+}
 
 /**
  * Fetches real-time quote data for a given stock symbol
@@ -14,7 +16,8 @@ export const getStockQuote = withRateLimit(
   async (symbol: string): Promise<ApiResponse<StockQuote>> => {
     return withApiRetry(
       async () => {
-        const response = await polygonClient.stocks.lastQuote(symbol);
+        const client = getPolygonClient();
+        const response = await client.stocks.lastQuote(symbol);
         return {
           data: {
             symbol: response.symbol,
@@ -40,9 +43,10 @@ export const getStockDetails = withRateLimit(
   async (symbol: string): Promise<ApiResponse<StockDetails>> => {
     return withApiRetry(
       async () => {
+        const client = getPolygonClient();
         const [tickerDetails, shortInterest] = await Promise.all([
-          polygonClient.reference.tickerDetails(symbol),
-          polygonClient.reference.shortInterest(symbol),
+          client.reference.tickerDetails(symbol),
+          client.reference.shortInterest(symbol),
         ]);
 
         return {
@@ -75,13 +79,8 @@ export const getHistoricalPrices = withRateLimit(
   ): Promise<ApiResponse<PriceDataPoint[]>> => {
     return withApiRetry(
       async () => {
-        const response = await polygonClient.stocks.aggregates(
-          symbol,
-          1,
-          'day',
-          startDate,
-          endDate,
-        );
+        const client = getPolygonClient();
+        const response = await client.stocks.aggregates(symbol, 1, 'day', startDate, endDate);
         return {
           data: response.results.map((point: any) => ({
             timestamp: point.t,
