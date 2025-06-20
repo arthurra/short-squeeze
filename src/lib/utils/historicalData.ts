@@ -1,6 +1,6 @@
 import { cacheManager, CACHE_KEYS, CACHE_TTL } from './cache';
 import { PriceDataPoint, HistoricalPrices } from '../types/stock';
-import { kv } from '../kv';
+import { kv } from '../../../lib/kv';
 
 const RETENTION_DAYS = 30;
 const HISTORICAL_DATA_PREFIX = 'historical_data:';

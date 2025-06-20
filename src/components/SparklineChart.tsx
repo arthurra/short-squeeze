@@ -15,16 +15,17 @@ interface ChartDataPoint {
 }
 
 export function SparklineChart({ data, color = 'rgb(34, 197, 94)' }: SparklineChartProps) {
-  const chartData: ChartDataPoint[] =
-    Array.isArray(data) && typeof data[0] === 'number'
-      ? (data as number[]).map((price, index) => ({
-          price,
-          index,
-        }))
-      : (data as { date: string; price: number }[]).map((point, index) => ({
-          price: point.price,
-          index,
-        }));
+  let chartData: ChartDataPoint[] = [];
+  if (Array.isArray(data) && data.length > 0) {
+    if (typeof data[0] === 'number') {
+      chartData = (data as number[]).map((price, index) => ({ price, index }));
+    } else if (typeof data[0] === 'object' && data[0] !== null && 'price' in data[0]) {
+      chartData = (data as { date: string; price: number }[]).map((point, index) => ({
+        price: point.price,
+        index,
+      }));
+    }
+  }
 
   return (
     <ResponsiveContainer width="100%" height="100%" data-testid="sparkline-chart">

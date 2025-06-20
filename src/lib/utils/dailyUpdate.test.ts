@@ -1,5 +1,5 @@
 import { expect, jest, describe, it, beforeEach } from '@jest/globals';
-import { kv as realKv } from '../kv';
+import { kv as realKv } from '../../../lib/kv';
 import { mockPolygonClient as realMockPolygonClient } from '../mocks/polygonClient';
 
 // Define the interface for the mock client expected by updateStockData
@@ -53,7 +53,11 @@ jest.mock('./backup', () => ({
 }));
 
 // All imports must come after the mocks
-import { shouldUpdateData, updateStockData, getLatestStockData } from './dailyUpdate';
+import {
+  shouldUpdateData,
+  updateStockData,
+  getLatestStockData,
+} from '../../../lib/utils/dailyUpdate';
 import { cacheManager, CACHE_KEYS } from './cache';
 
 describe('Daily Update Utilities', () => {

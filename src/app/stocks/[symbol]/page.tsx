@@ -6,7 +6,7 @@ import { StockDetail } from '@/components/StockDetail';
 import { LoadingCard } from '@/components/ui/loading';
 import { usePagePerformance } from '@/lib/hooks/usePerformance';
 import { StockService } from '../../../../lib/api/stockService';
-import { StockAnalysis } from '../../../../lib/types/stock';
+import { StockAnalysis } from '../../../lib/types/stock';
 
 interface Stock {
   symbol: string;
@@ -42,6 +42,24 @@ export default function StockPage() {
         const stockAnalysis: StockAnalysis = await StockService.getStockAnalysis(symbol);
 
         // Transform StockAnalysis to Stock format for compatibility
+        let priceHistory: Array<{ date: string; price: number }> = [];
+        try {
+          // Fetch last 30 days of historical prices
+          const endDate = new Date();
+          const startDate = new Date();
+          startDate.setDate(endDate.getDate() - 30);
+          const format = (d: Date) => d.toISOString().slice(0, 10);
+          const resp = await StockService.getHistoricalPrices(
+            stockAnalysis.symbol,
+            format(startDate),
+            format(endDate),
+          );
+          if (resp.data && Array.isArray(resp.data)) {
+            priceHistory = resp.data.map((d: any) => ({ date: d.date, price: d.price }));
+          }
+        } catch (e) {
+          priceHistory = [];
+        }
         const transformedStock: Stock = {
           symbol: stockAnalysis.symbol,
           name: stockAnalysis.details.name,
@@ -53,7 +71,7 @@ export default function StockPage() {
           avgVolume: stockAnalysis.volumeAnalysis.averageVolume,
           sector: stockAnalysis.details.sector,
           industry: stockAnalysis.details.industry,
-          priceHistory: [], // This would need to be populated from historical data
+          priceHistory, // Now populated
         };
 
         setStock(transformedStock);

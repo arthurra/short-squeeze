@@ -1,5 +1,4 @@
-import '@testing-library/jest-dom';
-import { jest } from '@jest/globals';
+require('@testing-library/jest-dom');
 
 process.env.POLYGON_API_KEY = 'test-api-key';
 process.env.NEXT_PUBLIC_SENTRY_DSN = 'test-sentry-dsn';
@@ -19,16 +18,25 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// @ts-ignore
 // Mock ResizeObserver
 globalThis.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
   disconnect: jest.fn(),
-})) as jest.MockedClass<typeof ResizeObserver>;
+}));
 
+// @ts-ignore
 // Mock IntersectionObserver
 globalThis.IntersectionObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
   disconnect: jest.fn(),
-})) as jest.MockedClass<typeof IntersectionObserver>;
+}));
+
+// Fail tests on unhandled promise rejections for better debugging
+process.on('unhandledRejection', (reason) => {
+  // eslint-disable-next-line no-console
+  console.error('UNHANDLED PROMISE REJECTION:', reason);
+  throw reason;
+});

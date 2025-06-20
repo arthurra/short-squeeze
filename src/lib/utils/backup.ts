@@ -1,4 +1,4 @@
-import { kv } from '../kv';
+import { kv } from '../../../lib/kv';
 import { cacheManager, CACHE_KEYS } from './cache';
 import { HistoricalPrices } from '../types/stock';
 

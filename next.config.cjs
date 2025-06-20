@@ -14,7 +14,7 @@ module.exports = withBundleAnalyzer(
     // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
     org: 'ryan-arthur-digital',
-    project: 'javascript-nextjs',
+    project: 'short-squeeze',
 
     // Only print logs for uploading source maps in CI
     silent: !process.env.CI,

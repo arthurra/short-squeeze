@@ -1,4 +1,4 @@
-import { kv } from '../kv';
+import { kv } from '../../../lib/kv';
 import { config } from '../config/env';
 
 // Cache key prefixes for different data types

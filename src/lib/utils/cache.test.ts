@@ -1,6 +1,6 @@
 import { jest, expect, describe, it, beforeEach } from '@jest/globals';
 import { CacheManager, CACHE_KEYS, CACHE_TTL } from './cache';
-import { kv } from '../kv';
+import { kv } from '../../../lib/kv';
 
 // Mock the KV store
 jest.mock('../kv', () => ({

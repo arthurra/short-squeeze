@@ -1,5 +1,5 @@
 import { jest, expect, describe, it, beforeEach } from '@jest/globals';
-import { kv } from '../kv';
+import { kv } from '../../../lib/kv';
 import { cacheManager } from './cache';
 import { createBackup, restoreFromBackup, listBackups, cleanupOldBackups } from './backup';
 

@@ -5,8 +5,8 @@ import { StockCard } from './StockCard';
 import { type StockFilters } from './StockFilters';
 import { LoadingCard } from './ui/loading';
 import { useStockFilters } from '@/lib/hooks/useStockFilters';
-import { StockService } from '../../lib/api/stockService';
-import { StockAnalysis } from '../../lib/types/stock';
+import { StockService } from '@/lib/api/stockService';
+import { StockAnalysis } from '@/lib/types/stock';
 import dynamic from 'next/dynamic';
 
 // Lazy load DataRefreshIndicator component to reduce bundle size
@@ -61,20 +61,43 @@ export function StockList({ filters }: StockListProps) {
         const stockAnalyses = await StockService.getStockList(100);
 
         // Transform StockAnalysis to Stock format for compatibility
-        const transformedStocks: Stock[] = stockAnalyses.map((analysis: StockAnalysis) => ({
-          symbol: analysis.symbol,
-          name: analysis.details.name,
-          price: analysis.quote.price,
-          change: analysis.quote.changePercent,
-          volume: analysis.quote.volume,
-          marketCap: analysis.details.marketCap,
-          shortInterest: analysis.shortInterestAnalysis.shortInterestPercent,
-          avgVolume: analysis.volumeAnalysis.averageVolume,
-          sector: analysis.details.sector,
-          industry: analysis.details.industry,
-          priceHistory: [], // This would need to be populated from historical data
-          dilutionRisk: 'Medium' as const, // This would need to be calculated
-        }));
+        const transformedStocks: Stock[] = await Promise.all(
+          stockAnalyses.map(async (analysis: StockAnalysis) => {
+            let priceHistory: number[] = [];
+            try {
+              // Fetch last 7 days of historical prices
+              const endDate = new Date();
+              const startDate = new Date();
+              startDate.setDate(endDate.getDate() - 7);
+              const format = (d: Date) => d.toISOString().slice(0, 10);
+              const resp = await StockService.getHistoricalPrices(
+                analysis.symbol,
+                format(startDate),
+                format(endDate),
+              );
+              if (resp.data && Array.isArray(resp.data)) {
+                priceHistory = resp.data.map((d: any) => d.price);
+              }
+            } catch (e) {
+              // If fetching price history fails, leave it as empty array
+              priceHistory = [];
+            }
+            return {
+              symbol: analysis.symbol,
+              name: analysis.details.name,
+              price: analysis.quote.price,
+              change: analysis.quote.changePercent,
+              volume: analysis.quote.volume,
+              marketCap: analysis.details.marketCap,
+              shortInterest: analysis.shortInterestAnalysis.shortInterestPercent,
+              avgVolume: analysis.volumeAnalysis.averageVolume,
+              sector: analysis.details.sector,
+              industry: analysis.details.industry,
+              priceHistory, // Now populated
+              dilutionRisk: 'Medium' as const, // This would need to be calculated
+            };
+          }),
+        );
 
         setStocks(transformedStocks);
         setLastUpdated(Date.now());
