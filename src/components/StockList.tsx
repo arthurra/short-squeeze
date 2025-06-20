@@ -5,7 +5,6 @@ import { StockCard } from './StockCard';
 import { type StockFilters } from './StockFilters';
 import { LoadingCard } from './ui/loading';
 import { useStockFilters } from '@/lib/hooks/useStockFilters';
-import { StockService } from '@/lib/api/stockService';
 import { StockAnalysis } from '@/lib/types/stock';
 import dynamic from 'next/dynamic';
 
@@ -56,30 +55,31 @@ export function StockList({ filters }: StockListProps) {
     const fetchStocks = async () => {
       try {
         setLoading(true);
-
-        // Use the StockService to fetch data (mock or real based on config)
-        const stockAnalyses = await StockService.getStockList(100);
+        // Fetch stock analyses from the new API route
+        const response = await fetch('/api/stocks');
+        if (!response.ok) throw new Error('Failed to fetch stocks');
+        const stockAnalyses: StockAnalysis[] = await response.json();
 
         // Transform StockAnalysis to Stock format for compatibility
         const transformedStocks: Stock[] = await Promise.all(
           stockAnalyses.map(async (analysis: StockAnalysis) => {
             let priceHistory: number[] = [];
             try {
-              // Fetch last 7 days of historical prices
+              // Fetch last 7 days of historical prices from the new API route
               const endDate = new Date();
               const startDate = new Date();
               startDate.setDate(endDate.getDate() - 7);
               const format = (d: Date) => d.toISOString().slice(0, 10);
-              const resp = await StockService.getHistoricalPrices(
-                analysis.symbol,
-                format(startDate),
-                format(endDate),
+              const historyResp = await fetch(
+                `/api/stocks/${analysis.symbol}/history?start=${format(startDate)}&end=${format(endDate)}`,
               );
-              if (resp.data && Array.isArray(resp.data)) {
-                priceHistory = resp.data.map((d: any) => d.price);
+              if (historyResp.ok) {
+                const historyData = await historyResp.json();
+                if (Array.isArray(historyData)) {
+                  priceHistory = historyData.map((d: any) => d.price);
+                }
               }
             } catch (e) {
-              // If fetching price history fails, leave it as empty array
               priceHistory = [];
             }
             return {
@@ -93,12 +93,11 @@ export function StockList({ filters }: StockListProps) {
               avgVolume: analysis.volumeAnalysis.averageVolume,
               sector: analysis.details.sector,
               industry: analysis.details.industry,
-              priceHistory, // Now populated
-              dilutionRisk: 'Medium' as const, // This would need to be calculated
+              priceHistory,
+              dilutionRisk: 'Medium' as const,
             };
           }),
         );
-
         setStocks(transformedStocks);
         setLastUpdated(Date.now());
         setLoading(false);
@@ -108,7 +107,6 @@ export function StockList({ filters }: StockListProps) {
         setLoading(false);
       }
     };
-
     fetchStocks();
   }, []);
 

@@ -50,7 +50,7 @@ export class RateLimiter {
 }
 
 // Create a singleton instance with rate limit from config
-export const rateLimiter = new RateLimiter(config.apiRateLimit, 1000);
+export const rateLimiter = new RateLimiter(config.apiRateLimit, 60000);
 
 /**
  * Wraps a function with rate limiting

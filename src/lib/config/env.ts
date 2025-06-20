@@ -49,7 +49,7 @@ export const config: Config = {
   apiRetryAttempts: getNumberEnvVar('API_RETRY_ATTEMPTS', 3),
   apiRetryDelay: getNumberEnvVar('API_RETRY_DELAY', 1000),
   cacheTTL: getNumberEnvVar('CACHE_TTL', 300),
-  useMockData: getBooleanEnvVar('USE_MOCK_DATA', true),
+  useMockData: getBooleanEnvVar('USE_MOCK_DATA', false),
 };
 
 // Validate all required environment variables on startup
