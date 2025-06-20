@@ -15,7 +15,8 @@
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "type-check": "tsc --noEmit",
-    "prepare": "husky"
+    "prepare": "husky",
+    "setup": "./scripts/setup-env.sh"
   },
   "dependencies": {
     "@next/bundle-analyzer": "^15.3.3",

@@ -1,27 +1,12 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
+import { useParams } from 'next/navigation';
+import { StockDetail } from '@/components/StockDetail';
 import { LoadingCard } from '@/components/ui/loading';
 import { usePagePerformance } from '@/lib/hooks/usePerformance';
-
-// Lazy load StockDetail component to reduce initial bundle size
-const StockDetail = dynamic(
-  () => import('@/components/StockDetail').then((mod) => ({ default: mod.StockDetail })),
-  {
-    loading: () => <LoadingCard />,
-    ssr: false,
-  },
-);
-
-// Lazy load ErrorMessage component to reduce initial bundle size
-const ErrorMessage = dynamic(
-  () => import('@/components/ErrorBoundary').then((mod) => ({ default: mod.ErrorMessage })),
-  {
-    ssr: false,
-  },
-);
+import { StockService } from '../../../../lib/api/stockService';
+import { StockAnalysis } from '../../../../lib/types/stock';
 
 interface Stock {
   symbol: string;
@@ -34,30 +19,8 @@ interface Stock {
   avgVolume: number;
   sector: string;
   industry: string;
-  priceHistory: { date: string; price: number }[];
+  priceHistory: Array<{ date: string; price: number }>;
 }
-
-// Mock data for development
-const mockStock: Stock = {
-  symbol: 'STOCK1',
-  name: 'Stock 1',
-  price: 3.45,
-  change: 2.5,
-  volume: 1500000,
-  marketCap: 500000000,
-  shortInterest: 15.5,
-  avgVolume: 1200000,
-  sector: 'Technology',
-  industry: 'Software',
-  priceHistory: Array.from({ length: 30 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (29 - i));
-    return {
-      date: date.toISOString().split('T')[0],
-      price: 3.45 * (1 + (Math.random() - 0.5) * 0.1),
-    };
-  }),
-};
 
 export default function StockPage() {
   // Track page performance
@@ -72,28 +35,32 @@ export default function StockPage() {
   useEffect(() => {
     const fetchStock = async () => {
       try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        // Mock data for development
-        setStock({
-          symbol: params.symbol as string,
-          name: 'Example Stock',
-          price: 1.23,
-          change: 5.67,
-          volume: 1000000,
-          marketCap: 50000000,
-          shortInterest: 15.5,
-          avgVolume: 800000,
-          sector: 'Technology',
-          industry: 'Software',
-          priceHistory: Array.from({ length: 30 }, (_, i) => ({
-            date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString(),
-            price: 1 + Math.random() * 0.5,
-          })),
-        });
+        setLoading(true);
+        const symbol = params.symbol as string;
+
+        // Use the StockService to fetch data (mock or real based on config)
+        const stockAnalysis: StockAnalysis = await StockService.getStockAnalysis(symbol);
+
+        // Transform StockAnalysis to Stock format for compatibility
+        const transformedStock: Stock = {
+          symbol: stockAnalysis.symbol,
+          name: stockAnalysis.details.name,
+          price: stockAnalysis.quote.price,
+          change: stockAnalysis.quote.changePercent,
+          volume: stockAnalysis.quote.volume,
+          marketCap: stockAnalysis.details.marketCap,
+          shortInterest: stockAnalysis.shortInterestAnalysis.shortInterestPercent,
+          avgVolume: stockAnalysis.volumeAnalysis.averageVolume,
+          sector: stockAnalysis.details.sector,
+          industry: stockAnalysis.details.industry,
+          priceHistory: [], // This would need to be populated from historical data
+        };
+
+        setStock(transformedStock);
         setLastUpdated(Date.now());
         setLoading(false);
       } catch (err) {
+        console.error('Failed to fetch stock data:', err);
         setError('Failed to fetch stock data');
         setLoading(false);
       }
@@ -113,7 +80,10 @@ export default function StockPage() {
   if (error || !stock) {
     return (
       <main className="container mx-auto py-6">
-        <ErrorMessage message={error || 'Stock not found'} />
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+          <p className="text-gray-600">{error || 'Stock not found'}</p>
+        </div>
       </main>
     );
   }

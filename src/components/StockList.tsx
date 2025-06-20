@@ -5,6 +5,8 @@ import { StockCard } from './StockCard';
 import { type StockFilters } from './StockFilters';
 import { LoadingCard } from './ui/loading';
 import { useStockFilters } from '@/lib/hooks/useStockFilters';
+import { StockService } from '../../lib/api/stockService';
+import { StockAnalysis } from '../../lib/types/stock';
 import dynamic from 'next/dynamic';
 
 // Lazy load DataRefreshIndicator component to reduce bundle size
@@ -38,62 +40,6 @@ interface Stock {
   dilutionRisk: 'Low' | 'Medium' | 'High';
 }
 
-// Real penny stocks data for development
-const pennyStocks = [
-  { symbol: 'SNDL', name: 'Sundial Growers Inc.', sector: 'Healthcare', industry: 'Biotechnology' },
-  { symbol: 'CIDM', name: 'Cinedigm Corp.', sector: 'Technology', industry: 'Entertainment' },
-  { symbol: 'NAKD', name: 'Naked Brand Group Ltd.', sector: 'Consumer', industry: 'Retail' },
-  { symbol: 'ZOM', name: 'Zomedica Corp.', sector: 'Healthcare', industry: 'Biotechnology' },
-  { symbol: 'CTRM', name: 'Castor Maritime Inc.', sector: 'Finance', industry: 'Shipping' },
-  { symbol: 'IDEX', name: 'Ideanomics Inc.', sector: 'Technology', industry: 'Software' },
-  {
-    symbol: 'SENS',
-    name: 'Senseonics Holdings Inc.',
-    sector: 'Healthcare',
-    industry: 'Medical Devices',
-  },
-  { symbol: 'MARK', name: 'Remark Holdings Inc.', sector: 'Technology', industry: 'Software' },
-  { symbol: 'OGEN', name: 'Oragenics Inc.', sector: 'Healthcare', industry: 'Biotechnology' },
-  { symbol: 'TRCH', name: 'Torchlight Energy Resources', sector: 'Energy', industry: 'Oil & Gas' },
-];
-
-// Mock data for development
-const mockStocks: Stock[] = Array.from({ length: 1000 }, (_, i) => {
-  const baseStock = pennyStocks[i % pennyStocks.length];
-  const basePrice = 1 + Math.random() * 4; // Price between $1 and $5
-  const priceChange = (Math.random() - 0.5) * 0.1; // Random price change between -5% and +5%
-  const currentPrice = basePrice * (1 + priceChange);
-
-  // Generate 30 days of price history
-  const priceHistory = Array.from({ length: 30 }, (_, day) => {
-    const dailyChange = (Math.random() - 0.5) * 0.02; // Random daily change between -1% and +1%
-    return basePrice * (1 + dailyChange);
-  });
-
-  // Generate dilution risk based on market cap and recent price movement
-  const dilutionRisk = (() => {
-    const riskScore = Math.random();
-    if (riskScore < 0.3) return 'Low';
-    if (riskScore < 0.7) return 'Medium';
-    return 'High';
-  })();
-
-  return {
-    symbol: baseStock.symbol,
-    name: baseStock.name,
-    price: currentPrice,
-    change: priceChange * 100,
-    volume: Math.floor(Math.random() * 10000000),
-    marketCap: Math.floor(20000000 + Math.random() * 280000000), // Market cap between $20M and $300M
-    shortInterest: Math.random() * 50,
-    avgVolume: Math.floor(Math.random() * 5000000),
-    sector: baseStock.sector,
-    industry: baseStock.industry,
-    priceHistory: priceHistory,
-    dilutionRisk,
-  };
-});
-
 interface StockListProps {
   filters: StockFilters;
 }
@@ -109,12 +55,32 @@ export function StockList({ filters }: StockListProps) {
   useEffect(() => {
     const fetchStocks = async () => {
       try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setStocks(mockStocks);
+        setLoading(true);
+
+        // Use the StockService to fetch data (mock or real based on config)
+        const stockAnalyses = await StockService.getStockList(100);
+
+        // Transform StockAnalysis to Stock format for compatibility
+        const transformedStocks: Stock[] = stockAnalyses.map((analysis: StockAnalysis) => ({
+          symbol: analysis.symbol,
+          name: analysis.details.name,
+          price: analysis.quote.price,
+          change: analysis.quote.changePercent,
+          volume: analysis.quote.volume,
+          marketCap: analysis.details.marketCap,
+          shortInterest: analysis.shortInterestAnalysis.shortInterestPercent,
+          avgVolume: analysis.volumeAnalysis.averageVolume,
+          sector: analysis.details.sector,
+          industry: analysis.details.industry,
+          priceHistory: [], // This would need to be populated from historical data
+          dilutionRisk: 'Medium' as const, // This would need to be calculated
+        }));
+
+        setStocks(transformedStocks);
         setLastUpdated(Date.now());
         setLoading(false);
       } catch (err) {
+        console.error('Failed to fetch stocks:', err);
         setError('Failed to fetch stocks');
         setLoading(false);
       }

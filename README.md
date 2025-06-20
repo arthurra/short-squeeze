@@ -30,6 +30,7 @@ A real-time dashboard for tracking and analyzing penny stocks with short squeeze
 - npm 9.0 or later
 - Vercel account (for deployment)
 - Sentry account (for error tracking)
+- Polygon.io API key (for real data)
 
 ### Installation
 
@@ -49,10 +50,10 @@ A real-time dashboard for tracking and analyzing penny stocks with short squeeze
 3. Set up environment variables:
 
    ```bash
-   cp .env.example .env.local
+   cp .env.local.example .env.local
    ```
 
-   Fill in the required environment variables in `.env.local`:
+   Edit `.env.local` with your configuration:
 
    - `KV_URL`: Vercel KV database URL
    - `KV_REST_API_URL`: Vercel KV REST API URL
@@ -61,6 +62,11 @@ A real-time dashboard for tracking and analyzing penny stocks with short squeeze
    - `YAHOO_FINANCE_API_KEY`: Yahoo Finance API key
    - `POLYGON_API_KEY`: Polygon.io API key
    - `NEXT_PUBLIC_SENTRY_DSN`: Sentry DSN for error tracking
+   - `USE_MOCK_DATA`: Use mock data instead of real API
+   - `API_RATE_LIMIT`: API requests per second
+   - `API_RETRY_ATTEMPTS`: Number of retry attempts
+   - `API_RETRY_DELAY`: Delay between retries (ms)
+   - `CACHE_TTL`: Cache time-to-live (seconds)
 
 4. Start the development server:
    ```bash

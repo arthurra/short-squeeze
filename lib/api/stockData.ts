@@ -1,12 +1,12 @@
 import { restClient } from '@polygon.io/client-js';
-import { config } from '../config/env';
+import { getPolygonApiKey } from '../config/env';
 import { StockQuote, StockDetails, PriceDataPoint, ApiResponse, ApiError } from '../types/stock';
 import { withApiRetry } from '../utils/retry';
 import { withRateLimit } from '../utils/rateLimiter';
 
 // Helper to get Polygon.io client (for testability)
 function getPolygonClient() {
-  return restClient(config.polygonApiKey);
+  return restClient(getPolygonApiKey());
 }
 
 /**
@@ -100,3 +100,20 @@ export const getHistoricalPrices = withRateLimit(
     );
   },
 );
+
+// Fetch a list of active US stock tickers from Polygon.io (for use in StockService)
+export async function getPolygonTickers(count: number): Promise<string[]> {
+  const client = getPolygonClient();
+  // Use the reference.tickers method with correct params
+  const params = {
+    market: 'stocks' as any, // cast to any if type expects enum
+    active: 'true' as 'true', // use string literal type 'true'
+    type: 'CS' as any, // cast to any if type expects enum
+    limit: Math.min(count, 1000),
+  };
+  const response = await client.reference.tickers(params);
+  if (!response.results || !Array.isArray(response.results)) {
+    throw new Error('Unexpected response from Polygon tickers endpoint');
+  }
+  return response.results.slice(0, count).map((t: any) => t.ticker);
+}
