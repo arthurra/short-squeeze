@@ -76,7 +76,7 @@ export function StockList({ filters }: StockListProps) {
               if (historyResp.ok) {
                 const historyData = await historyResp.json();
                 if (Array.isArray(historyData)) {
-                  priceHistory = historyData.map((d: any) => d.price);
+                  priceHistory = historyData.map((d: any) => d.close);
                 }
               }
             } catch (e) {

@@ -5,8 +5,7 @@ import { useParams } from 'next/navigation';
 import { StockDetail } from '@/components/StockDetail';
 import { LoadingCard } from '@/components/ui/loading';
 import { usePagePerformance } from '@/lib/hooks/usePerformance';
-import { StockService } from '../../../../lib/api/stockService';
-import { StockAnalysis } from '../../../lib/types/stock';
+import { StockAnalysis } from '@/lib/types/stock';
 
 interface Stock {
   symbol: string;
@@ -38,24 +37,29 @@ export default function StockPage() {
         setLoading(true);
         const symbol = params.symbol as string;
 
-        // Use the StockService to fetch data (mock or real based on config)
-        const stockAnalysis: StockAnalysis = await StockService.getStockAnalysis(symbol);
+        // Fetch stock analysis from the API route
+        const analysisResp = await fetch(`/api/stocks/${symbol}`);
+        if (!analysisResp.ok) throw new Error('Failed to fetch stock analysis');
+        const stockAnalysis: StockAnalysis = await analysisResp.json();
 
-        // Transform StockAnalysis to Stock format for compatibility
+        // Fetch last 30 days of historical prices from the API route
         let priceHistory: Array<{ date: string; price: number }> = [];
         try {
-          // Fetch last 30 days of historical prices
           const endDate = new Date();
           const startDate = new Date();
           startDate.setDate(endDate.getDate() - 30);
           const format = (d: Date) => d.toISOString().slice(0, 10);
-          const resp = await StockService.getHistoricalPrices(
-            stockAnalysis.symbol,
-            format(startDate),
-            format(endDate),
+          const historyResp = await fetch(
+            `/api/stocks/${symbol}/history?start=${format(startDate)}&end=${format(endDate)}`,
           );
-          if (resp.data && Array.isArray(resp.data)) {
-            priceHistory = resp.data.map((d: any) => ({ date: d.date, price: d.price }));
+          if (historyResp.ok) {
+            const historyData = await historyResp.json();
+            if (Array.isArray(historyData)) {
+              priceHistory = historyData.map((d: any) => ({
+                date: new Date(d.timestamp).toISOString().slice(0, 10),
+                price: d.close,
+              }));
+            }
           }
         } catch (e) {
           priceHistory = [];
@@ -71,7 +75,7 @@ export default function StockPage() {
           avgVolume: stockAnalysis.volumeAnalysis.averageVolume,
           sector: stockAnalysis.details.sector,
           industry: stockAnalysis.details.industry,
-          priceHistory, // Now populated
+          priceHistory,
         };
 
         setStock(transformedStock);

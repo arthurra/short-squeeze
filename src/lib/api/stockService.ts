@@ -13,6 +13,8 @@ import {
   PriceDataPoint,
   StockAnalysis,
   ApiResponse,
+  StockNews,
+  SECFiling,
 } from '../types/stock';
 
 /**
@@ -62,51 +64,61 @@ export class StockService {
       return mockStockList(count);
     }
 
-    // --- Real API implementation ---
-    // 1. Fetch a list of active US stock tickers from polygon.io
-    // 2. For each ticker, fetch quote and details, and build StockAnalysis
-    // 3. Return the array (up to count)
+    // --- Refactored API implementation using Polygon.io full market snapshot ---
     try {
-      const { getPolygonTickers } = await import('./stockData');
-      const tickers = await getPolygonTickers(count);
-      // Fetch quote and details for each ticker in parallel (with some throttling)
-      const analyses: (StockAnalysis | null)[] = await Promise.all(
-        tickers.map(async (symbol: string) => {
-          try {
-            const [quoteResp, detailsResp] = await Promise.all([
-              StockService.getStockQuote(symbol),
-              StockService.getStockDetails(symbol),
-            ]);
-            // Compose a minimal StockAnalysis (fill in with defaults for missing fields)
-            return {
-              symbol,
-              quote: quoteResp.data,
-              details: detailsResp.data,
-              volumeAnalysis: {
-                averageVolume: quoteResp.data.volume,
-                currentVolume: quoteResp.data.volume,
-                volumeRatio: 1,
-                volumeSpike: false,
-              },
-              shortInterestAnalysis: {
-                shortInterest: detailsResp.data.shortInterest,
-                shortInterestRatio: detailsResp.data.shortInterestRatio,
-                daysToCover: 0,
-                shortInterestPercent: 0,
-              },
-              recentNews: [],
-              recentFilings: [],
-              squeezeScore: 0,
-              lastUpdated: Date.now(),
-            };
-          } catch (err) {
-            // Skip this symbol if any error
-            return null;
-          }
-        }),
-      );
-      // Filter out any nulls (failed fetches)
-      return analyses.filter((a): a is StockAnalysis => !!a).slice(0, count);
+      const apiKey = config.polygonApiKey || process.env.POLYGON_API_KEY;
+      const url = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?apiKey=${apiKey}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch market snapshot');
+      const data = await response.json();
+      if (!data.tickers || !Array.isArray(data.tickers))
+        throw new Error('Invalid snapshot response');
+      // Limit to requested count
+      const tickers = data.tickers.slice(0, count);
+      // Map snapshot data to StockAnalysis
+      return tickers.map((t: any): StockAnalysis => {
+        // Fallbacks for missing data
+        const symbol = t.ticker;
+        const price = t.lastTrade?.p ?? t.day?.c ?? 0;
+        const volume = t.day?.v ?? 0;
+        const marketCap = t.marketCap ?? 0;
+        return {
+          symbol,
+          quote: {
+            symbol,
+            price,
+            volume,
+            timestamp: t.updated ?? Date.now(),
+            change: t.todaysChange ?? 0,
+            changePercent: t.todaysChangePerc ?? 0,
+          },
+          details: {
+            symbol,
+            name: symbol, // Name not available in snapshot
+            marketCap,
+            sector: 'Unknown', // Not available in snapshot
+            industry: 'Unknown', // Not available in snapshot
+            shortInterest: 0, // Not available in snapshot
+            shortInterestRatio: 0, // Not available in snapshot
+          },
+          volumeAnalysis: {
+            averageVolume: volume,
+            currentVolume: volume,
+            volumeRatio: 1,
+            volumeSpike: false,
+          },
+          shortInterestAnalysis: {
+            shortInterest: 0,
+            shortInterestRatio: 0,
+            daysToCover: 0,
+            shortInterestPercent: 0,
+          },
+          recentNews: [],
+          recentFilings: [],
+          squeezeScore: 0,
+          lastUpdated: t.updated ?? Date.now(),
+        };
+      });
     } catch (err) {
       console.error('Failed to fetch stock list from Polygon.io:', err);
       return [];
@@ -123,10 +135,93 @@ export class StockService {
       return mockStockAnalysis(symbol);
     }
 
-    // For real API, we would combine multiple API calls
-    // This is a placeholder implementation
-    console.warn('Real API stock analysis not fully implemented, using mock data');
-    const { mockStockAnalysis } = await import('../mocks/stockData');
-    return mockStockAnalysis(symbol);
+    // Fetch historical prices for the last 30 days
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 30);
+    const format = (d: Date) => d.toISOString().slice(0, 10);
+    const historicalResp = await this.getHistoricalPrices(
+      symbol,
+      format(startDate),
+      format(endDate),
+    );
+    const historicalPrices = historicalResp.data;
+
+    // Use the most recent aggregate as the 'quote'
+    const latest = historicalPrices[historicalPrices.length - 1];
+    const quote = latest
+      ? {
+          symbol,
+          price: latest.close,
+          volume: latest.volume,
+          timestamp: latest.timestamp,
+          change: 0,
+          changePercent: 0,
+        }
+      : {
+          symbol,
+          price: 0,
+          volume: 0,
+          timestamp: Date.now(),
+          change: 0,
+          changePercent: 0,
+        };
+
+    // Fetch details as before
+    const detailsResp = await this.getStockDetails(symbol);
+    const details = detailsResp.data;
+
+    // Calculate volume analysis
+    const volumes = historicalPrices.map((p) => p.volume);
+    const averageVolume =
+      volumes.length > 0 ? volumes.reduce((a, b) => a + b, 0) / volumes.length : 0;
+    const volumeAnalysis = {
+      averageVolume,
+      currentVolume: quote.volume,
+      volumeRatio: averageVolume > 0 ? quote.volume / averageVolume : 0,
+      volumeSpike: averageVolume > 0 ? quote.volume / averageVolume > 2 : false,
+    };
+
+    // Calculate short interest analysis (Polygon does not provide real data, so use 0s)
+    const shortInterestAnalysis = {
+      shortInterest: details.shortInterest || 0,
+      shortInterestRatio: details.shortInterestRatio || 0,
+      daysToCover: 0,
+      shortInterestPercent: 0,
+    };
+
+    // Squeeze score (use your existing utility if available, else set to 0)
+    let squeezeScore = 0;
+    try {
+      const { calculateSqueezeSignal } = await import('../utils/squeezeScore');
+      squeezeScore = calculateSqueezeSignal({
+        currentVolume: quote.volume,
+        priceHistory: historicalPrices,
+        shortInterestPercent: shortInterestAnalysis.shortInterestPercent,
+        marketCap: details.marketCap,
+        avgVolume: volumeAnalysis.averageVolume,
+        recentFilings: [],
+        recentNews: [],
+        recentSocialPosts: [],
+      });
+    } catch {
+      squeezeScore = 0;
+    }
+
+    // News and filings (not available from Polygon, so leave empty)
+    const recentNews: StockNews[] = [];
+    const recentFilings: SECFiling[] = [];
+
+    return {
+      symbol,
+      quote,
+      details,
+      volumeAnalysis,
+      shortInterestAnalysis,
+      recentNews,
+      recentFilings,
+      squeezeScore,
+      lastUpdated: Date.now(),
+    };
   }
 }

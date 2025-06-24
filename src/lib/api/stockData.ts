@@ -3,6 +3,7 @@ import { getPolygonApiKey } from '../config/env';
 import { StockQuote, StockDetails, PriceDataPoint, ApiResponse, ApiError } from '../types/stock';
 import { withApiRetry } from '../utils/retry';
 import { withRateLimit } from '../utils/rateLimiter';
+import { getCachedData, setCachedData } from '../kv';
 
 // Helper to get Polygon.io client (for testability)
 function getPolygonClient() {
@@ -16,23 +17,29 @@ export const getStockQuote = withRateLimit(
   async (symbol: string): Promise<ApiResponse<StockQuote>> => {
     return withApiRetry(
       async () => {
-        const client = getPolygonClient();
-        const response = await client.stocks.lastQuote(symbol);
-
-        // ILastQuote returns ILastTradeInfo in results
-        const lastTrade = response.results;
-
-        return {
-          data: {
-            symbol: symbol,
-            price: lastTrade?.p || 0, // price
-            volume: lastTrade?.s || 0, // size
-            timestamp: typeof lastTrade?.t === 'number' ? lastTrade.t : Date.now(), // timestamp
-            change: 0, // Polygon.io doesn't provide change in lastQuote
-            changePercent: 0, // Polygon.io doesn't provide changePercent in lastQuote
-          },
-          timestamp: Date.now(),
-        };
+        let client;
+        try {
+          client = getPolygonClient();
+        } catch (err) {
+          throw err;
+        }
+        try {
+          const response = await client.stocks.lastQuote(symbol);
+          const lastTrade = response.results;
+          return {
+            data: {
+              symbol: symbol,
+              price: lastTrade?.p || 0,
+              volume: lastTrade?.s || 0,
+              timestamp: typeof lastTrade?.t === 'number' ? lastTrade.t : Date.now(),
+              change: 0,
+              changePercent: 0,
+            },
+            timestamp: Date.now(),
+          };
+        } catch (err) {
+          throw err;
+        }
       },
       'QUOTE_FETCH_ERROR',
       `Failed to fetch quote for ${symbol}`,
@@ -72,34 +79,35 @@ export const getStockDetails = withRateLimit(
 /**
  * Fetches historical price data for a stock
  */
-export const getHistoricalPrices = withRateLimit(
-  async (
-    symbol: string,
-    startDate: string,
-    endDate: string,
-  ): Promise<ApiResponse<PriceDataPoint[]>> => {
-    return withApiRetry(
-      async () => {
-        const client = getPolygonClient();
-        const response = await client.stocks.aggregates(symbol, 1, 'day', startDate, endDate);
-
-        return {
-          data: (response.results || []).map((point: any) => ({
-            timestamp: point.t,
-            open: point.o,
-            high: point.h,
-            low: point.l,
-            close: point.c,
-            volume: point.v,
-          })),
-          timestamp: Date.now(),
-        };
-      },
-      'HISTORICAL_FETCH_ERROR',
-      `Failed to fetch historical prices for ${symbol}`,
-    );
-  },
-);
+export const getHistoricalPrices = async (
+  symbol: string,
+  startDate: string,
+  endDate: string,
+): Promise<ApiResponse<PriceDataPoint[]>> => {
+  const cacheKey = `stock:history:${symbol}:${startDate}:${endDate}`;
+  // Try to get from cache
+  const cached = await getCachedData<ApiResponse<PriceDataPoint[]>>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+  // If not cached, fetch from Polygon
+  const client = getPolygonClient();
+  const response = await client.stocks.aggregates(symbol, 1, 'day', startDate, endDate);
+  const result: ApiResponse<PriceDataPoint[]> = {
+    data: (response.results || []).map((point: any) => ({
+      timestamp: point.t,
+      open: point.o,
+      high: point.h,
+      low: point.l,
+      close: point.c,
+      volume: point.v,
+    })),
+    timestamp: Date.now(),
+  };
+  // Cache the result for 24 hours (86400 seconds)
+  await setCachedData(cacheKey, result, 86400);
+  return result;
+};
 
 // Fetch a list of active US stock tickers from Polygon.io (for use in StockService)
 export async function getPolygonTickers(count: number): Promise<string[]> {
